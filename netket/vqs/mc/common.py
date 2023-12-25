@@ -22,7 +22,7 @@ from netket.utils.dispatch import dispatch
 
 
 def check_hilbert(A: AbstractHilbert, B: AbstractHilbert):
-    if not A == B:
+    if A != B:
         raise NotImplementedError(  # pragma: no cover
             f"Non matching hilbert spaces {A} and {B}"
         )

@@ -61,8 +61,7 @@ class FastARNNSequential(ARNNSequential):
             x = self._layers[i].update_site(x, index)
 
         log_psi = _normalize(x, self.machine_pow)
-        p = jnp.exp(self.machine_pow * log_psi.real)
-        return p
+        return jnp.exp(self.machine_pow * log_psi.real)
 
     def _take_prev_site(self, inputs: Array, index: int) -> Array:
         """

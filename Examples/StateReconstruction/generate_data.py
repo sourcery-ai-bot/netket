@@ -81,8 +81,7 @@ def generate(
         # sampling
         rand_n = np.random.choice(hi.n_states, p=p, size=n_shots)
 
-        for rn in rand_n:
-            training_samples.append(hi.numbers_to_states(rn))
+        training_samples.extend(hi.numbers_to_states(rn) for rn in rand_n)
         training_bases += [m] * n_shots
 
         rotations.append(rotation)

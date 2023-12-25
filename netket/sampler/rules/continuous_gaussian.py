@@ -43,7 +43,7 @@ class GaussianRule(MetropolisRule):
         """
         self.sigma = sigma
 
-    def transition(rule, sampler, machine, parameters, state, key, r):
+    def transition(self, sampler, machine, parameters, state, key, r):
         if jnp.issubdtype(r.dtype, jnp.complexfloating):
             raise TypeError(
                 "Gaussian Rule does not work with complex " "basis elements."
@@ -60,7 +60,7 @@ class GaussianRule(MetropolisRule):
 
         prop = jax.random.normal(
             key, shape=(n_chains, hilb.size), dtype=r.dtype
-        ) * jnp.asarray(rule.sigma, dtype=r.dtype)
+        ) * jnp.asarray(self.sigma, dtype=r.dtype)
 
         rp = jnp.where(np.equal(boundary, False), (r + prop), (r + prop) % modulus)
 

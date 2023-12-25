@@ -35,10 +35,7 @@ class Dispatcher:
         if method is None:
             return lambda m: self(m, precedence=precedence)
 
-        # If `method` has overloads, assume that those overloads need to be registered
-        # and that `method` is not an implementation.
-        overloads = get_overloads(method)
-        if overloads:
+        if overloads := get_overloads(method):
             for overload_method in overloads:
                 # All `f` returned by `self._add_method` are the same.
                 f = self._add_method(overload_method, None, precedence=precedence)

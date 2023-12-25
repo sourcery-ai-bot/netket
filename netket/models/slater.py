@@ -107,7 +107,7 @@ class Slater2nd(nn.Module):
         meaning that the first `n_orbitals` entries correspond to sector -1, the
         second `n_orbitals` correspond to 0 ... etc.
         """
-        if not n.shape[-1] == self.hilbert.size:
+        if n.shape[-1] != self.hilbert.size:
             raise ValueError(
                 f"Dimension mismatch. Expected samples with {self.hilbert.size} "
                 f"degrees of freedom, but got a sample of shape {n.shape} ({n.shape[-1]} dof)."

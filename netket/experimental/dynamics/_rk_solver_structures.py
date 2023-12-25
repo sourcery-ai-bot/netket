@@ -195,11 +195,7 @@ def general_time_step_adaptive(
 ):
     flags = SolverFlags(0)
 
-    if max_dt is None:
-        actual_dt = rk_state.dt
-    else:
-        actual_dt = jnp.minimum(rk_state.dt, max_dt)
-
+    actual_dt = rk_state.dt if max_dt is None else jnp.minimum(rk_state.dt, max_dt)
     y_tp1, y_err = tableau.step_with_error(f, rk_state.t.value, actual_dt, rk_state.y)
 
     scaled_err, norm_y = scaled_error(
@@ -281,11 +277,7 @@ def general_time_step_fixed(
     rk_state: RungeKuttaState,
     max_dt: Optional[float],
 ):
-    if max_dt is None:
-        actual_dt = rk_state.dt
-    else:
-        actual_dt = jnp.minimum(rk_state.dt, max_dt)
-
+    actual_dt = rk_state.dt if max_dt is None else jnp.minimum(rk_state.dt, max_dt)
     y_tp1 = tableau.step(f, rk_state.t.value, actual_dt, rk_state.y)
 
     return rk_state.replace(
@@ -431,10 +423,4 @@ class RKIntegratorConfig:
         )
 
     def __repr__(self):
-        return "{}(tableau={}, dt={}, adaptive={}{})".format(
-            "RKIntegratorConfig",
-            self.tableau,
-            self.dt,
-            self.adaptive,
-            f", **kwargs={self.kwargs}" if self.kwargs else "",
-        )
+        return f'RKIntegratorConfig(tableau={self.tableau}, dt={self.dt}, adaptive={self.adaptive}{f", **kwargs={self.kwargs}" if self.kwargs else ""})'

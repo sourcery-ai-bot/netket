@@ -175,7 +175,7 @@ class QSR(AbstractVariationalDriver):
         # chunk
         if self._chunk_size is not None:
             self.n_chunk = self.dataset.size // self._chunk_size
-            if not self.n_chunk * self._chunk_size == self.dataset.size:
+            if self.n_chunk * self._chunk_size != self.dataset.size:
                 warnings.warn(
                     "WARNING: chunk size does not divide the number of samples, the last few chunks will be smaller",
                     stacklevel=2,
@@ -191,11 +191,7 @@ class QSR(AbstractVariationalDriver):
     def _forward_and_backward(self):
         state = self.state
 
-        if self.mixed_states:
-            state_diag = state.diagonal
-        else:
-            state_diag = self.state
-
+        state_diag = state.diagonal if self.mixed_states else self.state
         state.reset()
 
         # compute the neg gradient of log Z
@@ -524,4 +520,4 @@ class QSR(AbstractVariationalDriver):
                 ("State       ", self.state),
             ]
         ]
-        return "\n{}".format(" " * 3 * (depth + 1)).join([str(self), *lines])
+        return f'\n{" " * 3 * (depth + 1)}'.join([str(self), *lines])

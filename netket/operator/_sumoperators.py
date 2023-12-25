@@ -77,7 +77,7 @@ class SumOperator(ContinuousOperator):
             dtype: Data type of the matrix elements. Defaults to `np.float64`
         """
         hi_spaces = [op.hilbert for op in operators]
-        if not all(hi == hi_spaces[0] for hi in hi_spaces):
+        if any(hi != hi_spaces[0] for hi in hi_spaces):
             raise NotImplementedError(
                 "Cannot add operators on different hilbert spaces"
             )
@@ -100,7 +100,7 @@ class SumOperator(ContinuousOperator):
 
         super().__init__(hi_spaces[0], dtype)
 
-        self._is_hermitian = all([op.is_hermitian for op in operators])
+        self._is_hermitian = all(op.is_hermitian for op in operators)
         self.__attrs = None
 
     @property

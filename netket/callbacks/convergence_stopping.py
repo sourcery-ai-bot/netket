@@ -64,7 +64,4 @@ class ConvergenceStopping:
         else:
             self._patience_counter = 0
 
-        if self._patience_counter > self.patience:
-            return False
-
-        return True
+        return self._patience_counter <= self.patience

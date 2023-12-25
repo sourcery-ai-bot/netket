@@ -18,17 +18,17 @@ for L in [2, 4, 6, 8, 10]:
     params_matrix = ma_matrix.init(jax.random.PRNGKey(0), dum_input)
     apply_matrix = jax.jit(lambda x: ma_matrix.apply(params_matrix, x))
 
-    print("timing DenseSymm fft mode, L = " + str(L))
+    print(f"timing DenseSymm fft mode, L = {str(L)}")
     compile_time = timeit(lambda: apply_fft(dum_input).block_until_ready(), number=1)
     runtime = timeit(lambda: apply_fft(dum_input).block_until_ready(), number=10) / 10
-    print("compile time = " + str(compile_time) + " runtime is " + str(runtime))
+    print(f"compile time = {str(compile_time)} runtime is {str(runtime)}")
 
-    print("timing DenseSymm matrix mode, L = " + str(L))
+    print(f"timing DenseSymm matrix mode, L = {str(L)}")
     compile_time = timeit(lambda: apply_matrix(dum_input).block_until_ready(), number=1)
     runtime = (
         timeit(lambda: apply_matrix(dum_input).block_until_ready(), number=10) / 10
     )
-    print("compile time = " + str(compile_time) + " runtime is " + str(runtime))
+    print(f"compile time = {str(compile_time)} runtime is {str(runtime)}")
 
 
 # Test DenseEquivariant
@@ -59,21 +59,21 @@ for L in [2, 4, 6, 8, 10]:
     params_matrix = ma_matrix.init(jax.random.PRNGKey(0), dum_input)
     apply_matrix = jax.jit(lambda x: ma_matrix.apply(params_matrix, x))
 
-    print("timing DenseEquivariant fft mode, L = " + str(L))
+    print(f"timing DenseEquivariant fft mode, L = {str(L)}")
     compile_time = timeit(lambda: apply_fft(dum_input).block_until_ready(), number=1)
     runtime = timeit(lambda: apply_fft(dum_input).block_until_ready(), number=10) / 10
-    print("compile time = " + str(compile_time) + " runtime is " + str(runtime))
+    print(f"compile time = {str(compile_time)} runtime is {str(runtime)}")
 
-    print("timing DenseEquivariant irreps mode, L = " + str(L))
+    print(f"timing DenseEquivariant irreps mode, L = {str(L)}")
     compile_time = timeit(lambda: apply_irreps(dum_input).block_until_ready(), number=1)
     runtime = (
         timeit(lambda: apply_irreps(dum_input).block_until_ready(), number=10) / 10
     )
-    print("compile time = " + str(compile_time) + " runtime is " + str(runtime))
+    print(f"compile time = {str(compile_time)} runtime is {str(runtime)}")
 
-    print("timing DenseEquivariant matrix mode, L = " + str(L))
+    print(f"timing DenseEquivariant matrix mode, L = {str(L)}")
     compile_time = timeit(lambda: apply_matrix(dum_input).block_until_ready(), number=1)
     runtime = (
         timeit(lambda: apply_matrix(dum_input).block_until_ready(), number=10) / 10
     )
-    print("compile time = " + str(compile_time) + " runtime is " + str(runtime))
+    print(f"compile time = {str(compile_time)} runtime is {str(runtime)}")

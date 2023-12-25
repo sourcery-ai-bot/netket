@@ -132,8 +132,7 @@ def get_nn_edges(
             elif node1 > node2:
                 node1, node2 = node2, node1
             true_edges.add((node1, node2))
-        for edge in true_edges:
-            colored_edges.append((*edge, k))
+        colored_edges.extend((*edge, k) for edge in true_edges)
     return colored_edges
 
 
@@ -148,7 +147,7 @@ def get_custom_edges(
     """Generates the edges described in `custom_edges` for all unit cells.
 
     See the docstring of `Lattice.__init__` for the syntax of `custom_edges."""
-    if not all([len(desc) in (3, 4) for desc in custom_edges]):
+    if any(len(desc) not in {3, 4} for desc in custom_edges):
         raise ValueError(
             dedent(
                 """

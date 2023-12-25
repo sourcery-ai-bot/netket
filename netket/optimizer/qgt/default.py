@@ -25,15 +25,11 @@ from .qgt_onthefly import QGTOnTheFly
 
 from .. import solver as nk_solver_module
 
-solvers = []
-
-for solver in dir(nk_solver_module):
-    # only add solvers, not random
-    # useless things
-    if solver[:2] == "__":
-        continue
-    else:
-        solvers.append(getattr(nk_solver_module, solver))
+solvers = [
+    getattr(nk_solver_module, solver)
+    for solver in dir(nk_solver_module)
+    if solver[:2] != "__"
+]
 
 
 def _is_dense_solver(solver: Any) -> bool:
@@ -43,10 +39,7 @@ def _is_dense_solver(solver: Any) -> bool:
     if isinstance(solver, partial):
         solver = solver.func
 
-    if solver in solvers:
-        return True
-
-    return False
+    return solver in solvers
 
 
 def default_qgt_matrix(variational_state, solver=False, **kwargs):
@@ -68,16 +61,12 @@ def default_qgt_matrix(variational_state, solver=False, **kwargs):
     # TODO: Remove this once all QGT support diag_scale.
     has_diag_rescale = kwargs.pop("diag_scale", None) is not None
 
-    # arbitrary heuristic: if the network's parameters has many leaves
-    # (an rbm has 3) then JacobianDense might be faster
-    # the numbers chosen below are rather arbitrary and should be tuned.
-    if (n_param_leaves > 6 and n_params > 800) or has_diag_rescale:
-        if nkjax.tree_ishomogeneous(variational_state.variables):
-            return partial(QGTJacobianDense, **kwargs)
-        else:
-            return partial(QGTJacobianPyTree, **kwargs)
-    else:
+    if (n_param_leaves <= 6 or n_params <= 800) and not has_diag_rescale:
         return partial(QGTOnTheFly, **kwargs)
+    if nkjax.tree_ishomogeneous(variational_state.variables):
+        return partial(QGTJacobianDense, **kwargs)
+    else:
+        return partial(QGTJacobianPyTree, **kwargs)
 
 
 class QGTAuto:

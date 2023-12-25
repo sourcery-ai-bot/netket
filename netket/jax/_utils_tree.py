@@ -185,14 +185,13 @@ register_pytree_node(
 
 
 def _tree_to_real(x):
-    if tree_leaf_iscomplex(x):
-        # TODO find a way to make it a nop?
-        # return jax.vmap(lambda y: jnp.array((y.real, y.imag)))(x)
-        r = jax.tree_map(lambda x: x.real if jnp.iscomplexobj(x) else x, x)
-        i = jax.tree_map(lambda x: x.imag if jnp.iscomplexobj(x) else None, x)
-        return RealImagTuple((r, i))
-    else:
+    if not tree_leaf_iscomplex(x):
         return x
+    # TODO find a way to make it a nop?
+    # return jax.vmap(lambda y: jnp.array((y.real, y.imag)))(x)
+    r = jax.tree_map(lambda x: x.real if jnp.iscomplexobj(x) else x, x)
+    i = jax.tree_map(lambda x: x.imag if jnp.iscomplexobj(x) else None, x)
+    return RealImagTuple((r, i))
 
 
 def _tree_to_real_inverse(x):

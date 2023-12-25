@@ -30,7 +30,7 @@ def test_key_split(_mpi_size, _mpi_comm, _mpi_rank):
     key = nk.jax.PRNGKey(1256)
 
     keys = comm.allgather(key)
-    assert all([jnp.all(k == key) for k in keys])
+    assert all(jnp.all(k == key) for k in keys)
 
     key, _ = nk.jax.mpi_split(key)
     keys = MPI.COMM_WORLD.allgather(key)
@@ -42,6 +42,6 @@ def test_key_split(_mpi_size, _mpi_comm, _mpi_rank):
         if _mpi_rank == r:
             assert np.array(key) == np.array(ki)
         else:
-            assert not np.array(key) == np.array(ki)
+            assert np.array(key) != np.array(ki)
 
     assert len(keys) == size

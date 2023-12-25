@@ -152,10 +152,7 @@ class AbstractHilbert(abc.ABC):
         return NotImplemented
 
     def __eq__(self, other) -> bool:
-        if isinstance(other, type(self)):
-            return self._attrs == other._attrs
-
-        return False
+        return self._attrs == other._attrs if isinstance(other, type(self)) else False
 
     def __hash__(self):
         if self._hash is None:

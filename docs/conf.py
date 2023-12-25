@@ -197,9 +197,7 @@ def autodoc_skip_member(app, what, name, obj, skip, options):
         "__dict__",  # undoc-members
         "__new__",
     )
-    exclude = name in exclusions
-    if name == "__init__":
-        exclude = True if obj.__doc__ is None else False
+    exclude = obj.__doc__ is None if name == "__init__" else name in exclusions
     return True if (skip or exclude) else None
 
 

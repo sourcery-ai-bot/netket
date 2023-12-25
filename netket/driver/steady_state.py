@@ -152,4 +152,4 @@ class SteadyState(AbstractVariationalDriver):
                 ("SR solver   ", self.sr),
             ]
         ]
-        return "\n{}".format(" " * 3 * (depth + 1)).join([str(self), *lines])
+        return f'\n{" " * 3 * (depth + 1)}'.join([str(self), *lines])

@@ -74,7 +74,7 @@ class TensorHilbert(ABC):
             [[i for _ in range(hi.size)] for (i, hi) in enumerate(hilb_spaces)]
         )
 
-        self._sizes = tuple([hi.size for hi in hilb_spaces])
+        self._sizes = tuple(hi.size for hi in hilb_spaces)
         self._cum_sizes = np.cumsum(self._sizes)
         self._cum_indices = np.concatenate([[0], self._cum_sizes])
         self._size = sum(self._sizes)
@@ -131,30 +131,29 @@ class TensorHilbert(ABC):
 
         if self.size - Nsites == 0:
             return None
-        else:
-            new_hilberts = []
-            sz = 0
-            for hilb in self._hilbert_spaces:
-                sites_this_hilb = (
-                    sites[np.logical_and(sites >= sz, sites < sz + hilb.size)] - sz
-                )
-                if len(sites_this_hilb) == 0:
-                    new_hilberts.append(hilb)
-                else:
-                    ptraced_hilb = hilb.ptrace(sites_this_hilb)
-                    if ptraced_hilb is not None:
-                        new_hilberts.append(ptraced_hilb)
-                sz += hilb.size
+        new_hilberts = []
+        sz = 0
+        for hilb in self._hilbert_spaces:
+            sites_this_hilb = (
+                sites[np.logical_and(sites >= sz, sites < sz + hilb.size)] - sz
+            )
+            if len(sites_this_hilb) == 0:
+                new_hilberts.append(hilb)
+            else:
+                ptraced_hilb = hilb.ptrace(sites_this_hilb)
+                if ptraced_hilb is not None:
+                    new_hilberts.append(ptraced_hilb)
+            sz += hilb.size
 
-            if len(new_hilberts) == 0:
-                return None
-            elif len(new_hilberts) >= 1:
-                hilb = new_hilberts[0]
+        if not new_hilberts:
+            return None
+        elif len(new_hilberts) >= 1:
+            hilb = new_hilberts[0]
 
-                for h in new_hilberts[1:]:
-                    hilb = hilb * h
+            for h in new_hilberts[1:]:
+                hilb = hilb * h
 
-                return hilb
+            return hilb
 
     def __repr__(self):
         if len(self._hilbert_spaces) == 1:
@@ -171,9 +170,7 @@ class TensorGenericHilbert(TensorHilbert, AbstractHilbert):
     def __init__(self, *hilb_spaces: AbstractHilbert):
         if not all(isinstance(hi, AbstractHilbert) for hi in hilb_spaces):
             raise TypeError(
-                "Arguments to TensorHilbert must all be subtypes of "
-                "AbstractHilbert. However the types are:\n\n"
-                f"{list(type(hi) for hi in hilb_spaces)}\n"
+                f"Arguments to TensorHilbert must all be subtypes of AbstractHilbert. However the types are:\n\n{[type(hi) for hi in hilb_spaces]}\n"
             )
         super().__init__(hilb_spaces)
 

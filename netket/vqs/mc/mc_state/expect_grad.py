@@ -50,18 +50,17 @@ def expect_and_grad_default_formula(
     if use_covariance is None:
         use_covariance = Ô.is_hermitian
 
-    if use_covariance:
-        # Implementation of expect_and_grad for `use_covariance == True` (due to the Literal[True]
-        # type in the signature).` This case is equivalent to the composition of the
-        # `expect_and_forces` and `force_to_grad` functions.
-        # return expect_and_grad_from_covariance(vstate, Ô, *args, mutable=mutable)
-        Ō, Ō_grad = expect_and_forces(vstate, Ô, chunk_size, *args, mutable=mutable)
-        Ō_grad = force_to_grad(Ō_grad, vstate.parameters)
-        return Ō, Ō_grad
-    else:
+    if not use_covariance:
         return expect_and_grad_nonhermitian(
             vstate, Ô, chunk_size, *args, mutable=mutable
         )
+    # Implementation of expect_and_grad for `use_covariance == True` (due to the Literal[True]
+    # type in the signature).` This case is equivalent to the composition of the
+    # `expect_and_forces` and `force_to_grad` functions.
+    # return expect_and_grad_from_covariance(vstate, Ô, *args, mutable=mutable)
+    Ō, Ō_grad = expect_and_forces(vstate, Ô, chunk_size, *args, mutable=mutable)
+    Ō_grad = force_to_grad(Ō_grad, vstate.parameters)
+    return Ō, Ō_grad
 
 
 # Squared is a special operator...

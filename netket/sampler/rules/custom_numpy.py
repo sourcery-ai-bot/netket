@@ -66,14 +66,14 @@ class CustomRuleNumpy(MetropolisRule):
         # normalise
         self.weight_list = weight_list / weight_list.sum()
 
-    def init_state(rule, sampler, machine, params, key):
+    def init_state(self, sampler, machine, params, key):
         return CustomRuleState(
             sections=np.empty(sampler.n_batches, dtype=np.int32),
             rand_op_n=np.empty(sampler.n_batches, dtype=np.int32),
-            weight_cumsum=rule.weight_list.cumsum(),
+            weight_cumsum=self.weight_list.cumsum(),
         )
 
-    def transition(rule, sampler, machine, parameters, state, rng, σ):
+    def transition(self, sampler, machine, parameters, state, rng, σ):
         rule_state = state.rule_state
 
         # numba does not support jitting np.random number generators
@@ -88,7 +88,7 @@ class CustomRuleNumpy(MetropolisRule):
             out=rule_state.rand_op_n,
         )
 
-        σ_conns, mels = rule.operator.get_conn_filtered(
+        σ_conns, mels = self.operator.get_conn_filtered(
             state.σ, rule_state.sections, rule_state.rand_op_n
         )
 

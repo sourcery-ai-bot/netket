@@ -61,10 +61,7 @@ class PGSymmetry(Element):
         ndim = W.shape[0]
         if not np.allclose(W.T @ W, np.eye(ndim)):
             raise ValueError("W must be an orthogonal matrix")
-        if w is None:
-            w = np.zeros((ndim, 1))
-        else:
-            w = np.asarray(w).reshape(ndim, 1)
+        w = np.zeros((ndim, 1)) if w is None else np.asarray(w).reshape(ndim, 1)
         return (np.block([[W, w], [np.zeros(ndim), 1]]),), {}
 
     @property
@@ -200,25 +197,17 @@ def _2D_name(W: Array, w: Optional[Array]) -> str:
     trans = None if _naming_allclose(trans, 0.0) else f"{_to_rational_vector(trans)}"
 
     if _naming_isclose(np.linalg.det(W), 1.0):  # rotations
-        if _naming_allclose(W, np.eye(2)):  # identity / translation
-            if trans is None:
-                return "Id()"
-            else:
-                return f"Translation{trans}"
-        else:
-            angle = np.arctan2(W[1, 0], W[0, 0])
-            # in practice, all rotations are by integer degrees
-            angle = int(np.rint(np.degrees(angle)))
-            return f"Rot({angle}°){origin}"
+        if _naming_allclose(W, np.eye(2)):
+            return "Id()" if trans is None else f"Translation{trans}"
+        angle = np.arctan2(W[1, 0], W[0, 0])
+        # in practice, all rotations are by integer degrees
+        angle = int(np.rint(np.degrees(angle)))
+        return f"Rot({angle}°){origin}"
 
     elif _naming_isclose(np.linalg.det(W), -1.0):  # reflections / glides
         axis = np.arctan2(W[1, 0], W[0, 0]) / 2
         axis = int(np.rint(np.degrees(axis)))
-        if trans is None:
-            return f"Refl({axis}°){origin}"
-        else:
-            return f"Glide{trans}{origin}"
-
+        return f"Refl({axis}°){origin}" if trans is None else f"Glide{trans}{origin}"
     else:
         raise ValueError("W must be an orthogonal matrix")
 
@@ -235,34 +224,33 @@ def _3D_name(W: Array, w: Optional[Array] = None) -> str:
     origin = "" if _naming_allclose(origin, 0.0) else f"O{_to_rational_vector(origin)}"
 
     if _naming_isclose(np.linalg.det(W), 1.0):  # rotations / screws
-        if _naming_allclose(W, np.eye(3)):  # identity / translation
-            if _naming_allclose(trans, 0.0):
-                return "Id()"
-            else:
-                return f"Translation{_to_rational_vector(trans)}"
+        if _naming_allclose(W, np.eye(3)):
+            return (
+                "Id()"
+                if _naming_allclose(trans, 0.0)
+                else f"Translation{_to_rational_vector(trans)}"
+            )
+        e, v = _eig(W)
 
-        else:  # actual rotations / screws
-            e, v = _eig(W)
+        if _naming_isclose(np.trace(W), -1.0):  # π-rotations
+            angle = pi
+            # rotation axis is eigenvector with eigenvalue +1
+            axis = v[:, _naming_isclose(e, 1.0)].real.flatten()
 
-            if _naming_isclose(np.trace(W), -1.0):  # π-rotations
-                angle = pi
-                # rotation axis is eigenvector with eigenvalue +1
-                axis = v[:, _naming_isclose(e, 1.0)].real.flatten()
+        else:  # pick axis s.t. rotation angle be positive
+            pos = e.imag > _naming_tol
+            angle = np.angle(e[pos])[0]
+            v = v[:, pos].flatten()
+            axis = np.cross(v.imag, v.real)
+            if not _naming_allclose(trans, 0.0):
+                # screws may have negative angles if trans, axis are opposite
+                angle *= np.sign(axis @ trans)
 
-            else:  # pick axis s.t. rotation angle be positive
-                pos = e.imag > _naming_tol
-                angle = np.angle(e[pos])[0]
-                v = v[:, pos].flatten()
-                axis = np.cross(v.imag, v.real)
-                if not _naming_allclose(trans, 0.0):
-                    # screws may have negative angles if trans, axis are opposite
-                    angle *= np.sign(axis @ trans)
-
-            angle = int(np.rint(np.degrees(angle)))
-            if _naming_allclose(trans, 0.0):
-                return f"Rot({angle}°){_to_int_vector(axis)}{origin}"
-            else:
-                return f"Screw({angle}°){_to_rational_vector(trans)}{origin}"
+        angle = int(np.rint(np.degrees(angle)))
+        if _naming_allclose(trans, 0.0):
+            return f"Rot({angle}°){_to_int_vector(axis)}{origin}"
+        else:
+            return f"Screw({angle}°){_to_rational_vector(trans)}{origin}"
 
     elif _naming_isclose(np.linalg.det(W), -1.0):  # improper rotations
         if _naming_allclose(W, -np.eye(3)):  # inversion
@@ -382,10 +370,8 @@ class PointGroup(FiniteGroup):
     @struct.property_cached
     def is_symmorphic(self) -> bool:
         return all(
-            [
-                (True if isinstance(elem, Identity) else elem.is_symmorphic)
-                for elem in self.elems
-            ]
+            True if isinstance(elem, Identity) else elem.is_symmorphic
+            for elem in self.elems
         )
 
     def __eq__(self, other) -> bool:
@@ -395,11 +381,7 @@ class PointGroup(FiniteGroup):
             return False
         if not np.allclose(self.unit_cell, other.unit_cell):
             return False
-        # for simplicity we also require that they be ordered the same way
-        for i, elem in enumerate(self.elems):
-            if elem != other.elems[i]:
-                return False
-        return True
+        return all(elem == other.elems[i] for i, elem in enumerate(self.elems))
 
     def matrix(self, x: Element) -> Array:
         if isinstance(x, Identity):
@@ -489,10 +471,7 @@ class PointGroup(FiniteGroup):
 
         pgroup = PointGroup(group.elems, self.ndim, unit_cell=self.unit_cell)
 
-        if return_inverse:
-            return pgroup, inverse
-        else:
-            return pgroup
+        return (pgroup, inverse) if return_inverse else pgroup
 
     def rotation_group(self) -> "PointGroup":
         """
@@ -500,12 +479,7 @@ class PointGroup(FiniteGroup):
         (i.e. symmetries where the determinant of the transformation matrix is +1)
         in `self`
         """
-        subgroup = []
-        for i in self.elems:
-            if isinstance(i, Identity):
-                subgroup.append(i)
-            elif i.is_proper:
-                subgroup.append(i)
+        subgroup = [i for i in self.elems if isinstance(i, Identity) or i.is_proper]
         return PointGroup(subgroup, self.ndim, unit_cell=self.unit_cell)
 
     def change_origin(self, origin: Array) -> "PointGroup":
@@ -556,13 +530,12 @@ class PointGroup(FiniteGroup):
             n_symm = len(self)
             product_table = np.zeros((n_symm, n_symm), dtype=int)
 
-            for i in range(n_symm):
-                for j in range(n_symm):
-                    product_table[i, j] = lookup[
-                        HashableArray(
-                            self._canonical_from_affine_matrix(product_matrices[i, j])
-                        )
-                    ]
+            for i, j in itertools.product(range(n_symm), range(n_symm)):
+                product_table[i, j] = lookup[
+                    HashableArray(
+                        self._canonical_from_affine_matrix(product_matrices[i, j])
+                    )
+                ]
 
             return product_table[self.inverse]  # reshuffle rows to match specs
         except KeyError as err:
@@ -587,12 +560,12 @@ def product(A: PointGroup, B: PointGroup):  # noqa: F811
         raise ValueError("Incompatible groups (`PointGroup`s of different dimension)")
     if A.unit_cell is None:
         unit_cell = B.unit_cell
-    else:
-        if B.unit_cell is not None and not np.allclose(A.unit_cell, B.unit_cell):
-            raise ValueError(
-                "Incompatible groups (`PointGroup`s with different unit cells)"
-            )
+    elif B.unit_cell is None or np.allclose(A.unit_cell, B.unit_cell):
         unit_cell = A.unit_cell
+    else:
+        raise ValueError(
+            "Incompatible groups (`PointGroup`s with different unit cells)"
+        )
     return PointGroup(
         elems=[a @ b for a, b in itertools.product(A.elems, B.elems)],
         ndim=A.ndim,

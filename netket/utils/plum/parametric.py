@@ -30,18 +30,17 @@ class ParametricTypeMeta(type):
     `Type[type(Arg1), type(Arg2)](Arg1, Arg2, **kw_args)`.
     """
 
-    def __getitem__(cls, p):
-        if not cls.concrete:
-            # Initialise the type parameters. This can perform, e.g., validation.
-            p = p if isinstance(p, tuple) else (p,)  # Ensure that it is a tuple.
-            p = cls.__init_type_parameter__(*p)
-            # Type parameter has been initialised! Proceed to construct the type.
-            p = p if isinstance(p, tuple) else (p,)  # Again ensure that it is a tuple.
-            return cls.__new__(cls, *p)
-        else:
+    def __getitem__(self, p):
+        if self.concrete:
             raise TypeError("Cannot specify type parameters. This type is concrete.")
+        # Initialise the type parameters. This can perform, e.g., validation.
+        p = p if isinstance(p, tuple) else (p,)  # Ensure that it is a tuple.
+        p = self.__init_type_parameter__(*p)
+        # Type parameter has been initialised! Proceed to construct the type.
+        p = p if isinstance(p, tuple) else (p,)  # Again ensure that it is a tuple.
+        return self.__new__(self, *p)
 
-    def __concrete_class__(cls, *args, **kw_args):
+    def __concrete_class__(self, *args, **kw_args):
         """If `cls` is not a concrete class, infer the type parameters and return a
         concrete class. If `cls` is already a concrete class, simply return it.
 
@@ -52,13 +51,13 @@ class ParametricTypeMeta(type):
         Returns:
             type: A concrete class.
         """
-        if getattr(cls, "parametric", False):
-            if not cls.concrete:
-                type_parameter = cls.__infer_type_parameter__(*args, **kw_args)
-                cls = cls[type_parameter]
-        return cls
+        if getattr(self, "parametric", False):
+            if not self.concrete:
+                type_parameter = self.__infer_type_parameter__(*args, **kw_args)
+                self = self[type_parameter]
+        return self
 
-    def __init_type_parameter__(cls, *ps):
+    def __init_type_parameter__(self, *ps):
         """Function called to initialise the type parameters.
 
         The default behaviour is to just return `ps`.
@@ -71,7 +70,7 @@ class ParametricTypeMeta(type):
         """
         return ps
 
-    def __infer_type_parameter__(cls, *args, **kw_args):
+    def __infer_type_parameter__(self, *args, **kw_args):
         """Function called when the constructor of this parametric type is called
         before the parameters have been specified.
 
@@ -131,21 +130,21 @@ def _default_le_type_par(
 class CovariantMeta(ParametricTypeMeta):
     """A metaclass that implements *covariance* of parametric types."""
 
-    def __subclasscheck__(cls, subclass):
-        if is_concrete(cls) and is_concrete(subclass):
+    def __subclasscheck__(self, subclass):
+        if is_concrete(self) and is_concrete(subclass):
             # Check that they are instances of the same parametric type.
-            if all(issubclass(b, cls.__bases__) for b in subclass.__bases__):
+            if all(issubclass(b, self.__bases__) for b in subclass.__bases__):
                 p_sub = subclass.type_parameter
-                p_cls = cls.type_parameter
+                p_cls = self.type_parameter
                 # Ensure that both are in tuple form.
                 p_sub = p_sub if isinstance(p_sub, tuple) else (p_sub,)
                 p_cls = p_cls if isinstance(p_cls, tuple) else (p_cls,)
-                return cls.__le_type_parameter__(p_sub, p_cls)
+                return self.__le_type_parameter__(p_sub, p_cls)
 
         # Default behaviour to `type`s subclass check.
-        return type.__subclasscheck__(cls, subclass)
+        return type.__subclasscheck__(self, subclass)
 
-    def __instancecheck__(cls, instance):
+    def __instancecheck__(self, instance):
         # If `A` is a parametric type, then `A[T1]` and `A[T2]` are subclasses of
         # `A`. With the implementation of `__subclasscheck__` above, we have that
         # `issubclass(A[T1], A[T2])` whenever `issubclass(T1, T2)`. _However_,
@@ -155,9 +154,11 @@ class CovariantMeta(ParametricTypeMeta):
         # `__instancecheck__` to ensure that `isinstance(A[T1](), A[T2])` whenever
         # `issubclass(T1, T2)`. In any case, we do first try `type.__instancecheck__`,
         # since it is fast and only gives true positives.
-        return type.__instancecheck__(cls, instance) or issubclass(type(instance), cls)
+        return type.__instancecheck__(self, instance) or issubclass(
+            type(instance), self
+        )
 
-    def __le_type_parameter__(cls, p_left, p_right):
+    def __le_type_parameter__(self, p_left, p_right):
         # Check that there are an equal number of parameters.
         if len(p_left) != len(p_right):
             return False
@@ -344,10 +345,7 @@ def type_parameter(x):
     Returns:
         object: Type parameter.
     """
-    if is_type(x):
-        t = x
-    else:
-        t = type(x)
+    t = x if is_type(x) else type(x)
     if hasattr(t, "parametric"):
         return t.type_parameter
     raise ValueError(
@@ -389,7 +387,7 @@ class Val:
     def __infer_type_parameter__(cls, *arg):
         """Function called when the constructor of `Val` is called to determine the type
         parameters."""
-        if len(arg) == 0:
+        if not arg:
             raise ValueError("The value must be specified.")
         elif len(arg) > 1:
             raise ValueError("Too many values. `Val` accepts only one argument.")
@@ -415,7 +413,7 @@ class Val:
             raise ValueError("The value must be specified.")
 
     def __repr__(self) -> str:
-        return repr_short(type(self)) + "()"
+        return f"{repr_short(type(self))}()"
 
     def __eq__(self, other):
         return type(self) == type(other)

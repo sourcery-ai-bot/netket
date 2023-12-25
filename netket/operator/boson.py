@@ -102,7 +102,7 @@ def number(
 
     N = hilbert.size_at_index(site)
 
-    D = np.array([m for m in np.arange(0, N)])
+    D = np.array(list(np.arange(0, N)))
     mat = np.diag(D, 0)
     mat = _sparse.coo_matrix(mat)
     return _LocalOperator(hilbert, mat, [site], dtype=dtype)
@@ -134,7 +134,7 @@ def proj(
     if n >= N:
         raise ValueError("Cannot project on a state above the cutoff.")
 
-    D = np.array([0 for m in np.arange(0, N)])
+    D = np.array([0 for _ in np.arange(0, N)])
     D[n] = 1
     mat = np.diag(D, 0)
     mat = _sparse.coo_matrix(mat)

@@ -50,10 +50,7 @@ class Graph(AbstractGraph):
         """
         edges, colors = self._clean_edges(edges)
         if n_nodes is None:
-            if len(edges) > 0:
-                n_nodes = max(max(e) for e in edges) + 1
-            else:
-                n_nodes = 0
+            n_nodes = max(max(e) for e in edges) + 1 if len(edges) > 0 else 0
         graph = igraph.Graph(directed=False)
         graph.add_vertices(n_nodes)
         graph.add_edges(edges, attributes={"color": colors})
@@ -74,7 +71,7 @@ class Graph(AbstractGraph):
             raise ValueError(
                 "Edges must be tuple of length 2 (or 3 for colored edges)."
             )
-        if not all(len(e) == len(e0) for e in edges):
+        if any(len(e) != len(e0) for e in edges):
             raise ValueError("Either all or none of the edges need to specify a color.")
 
         if len(e0) == 2:
@@ -97,11 +94,10 @@ class Graph(AbstractGraph):
 
         if "color" not in self._igraph.edge_attributes():
             self._igraph.es.set_attribute_values("color", [0] * self._igraph.ecount())
-        else:
-            if not all(isinstance(c, int) for c in self.edge_colors):
-                raise ValueError(
-                    "graph has 'color' edge attributes, but not all colors are integers."
-                )
+        elif not all(isinstance(c, int) for c in self.edge_colors):
+            raise ValueError(
+                "graph has 'color' edge attributes, but not all colors are integers."
+            )
 
         return self
 
@@ -217,9 +213,7 @@ class Graph(AbstractGraph):
     # Output and drawing
     # ------------------------------------------------------------------------
     def __repr__(self):
-        return "{}(n_nodes={}, n_edges={})".format(
-            str(type(self)).split(".")[-1][:-2], self.n_nodes, self.n_edges
-        )
+        return f'{str(type(self)).split(".")[-1][:-2]}(n_nodes={self.n_nodes}, n_edges={self.n_edges})'
 
 
 def Edgeless(n_nodes: int) -> Graph:

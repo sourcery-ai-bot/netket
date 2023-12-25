@@ -56,8 +56,8 @@ qst.add_observable(ha, "Energy")
 
 def run():
     for step in qst.iter(500, 50):
-        obs = qst.get_observable_stats()
         if mpi_rank == 0:
+            obs = qst.get_observable_stats()
             print(f"step={step}")
             print(f"observables={obs}")
 

@@ -48,13 +48,13 @@ vals = np.zeros((n_samples, batch_size), dtype=np.complex128)
 
 
 def log_val(n_times):
-    for k in range(n_times):
+    for _ in range(n_times):
         for i, sample in enumerate(samples):
             vals[i] = ma.log_val(sample)
 
 
 def py_log_val(n_times):
-    for k in range(n_times):
+    for _ in range(n_times):
         for i, sample in enumerate(samples):
             py_ma.log_val(sample, out=vals[i])
 

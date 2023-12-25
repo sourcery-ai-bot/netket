@@ -26,7 +26,7 @@ import jax
 
 
 def _cache_name(property_name):
-    return "__" + property_name + "_cache"
+    return f"__{property_name}_cache"
 
 
 def _raw_cache_name(cache_name):

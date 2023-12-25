@@ -85,7 +85,7 @@ class ExchangeRule(MetropolisRule):
         """
         if clusters is None and graph is not None:
             clusters = compute_clusters(graph, d_max)
-        elif not (clusters is not None and graph is None):
+        elif clusters is None or graph is not None:
             raise ValueError(
                 """You must either provide the list of exchange-clusters or a netket graph, from
                               which clusters will be computed using the maximum distance d_max. """
@@ -128,10 +128,7 @@ def compute_clusters(graph: AbstractGraph, d_max: int):
     distances = np.asarray(graph.distances())
     size = distances.shape[0]
     for i in range(size):
-        for j in range(i + 1, size):
-            if distances[i][j] <= d_max:
-                clusters.append((i, j))
-
+        clusters.extend((i, j) for j in range(i + 1, size) if distances[i][j] <= d_max)
     res_clusters = np.empty((len(clusters), 2), dtype=np.int64)
 
     for i, cluster in enumerate(clusters):

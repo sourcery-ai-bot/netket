@@ -92,14 +92,13 @@ def _prune_zeros(x: Array, atol: float = 1e-08) -> Array:
 
 def prune_zeros(x: Array, atol: float = 1e-08) -> Array:
     """Prunes nearly zero real and imaginary parts"""
-    if np.iscomplexobj(x):
-        # Check if complex part is nonzero at all
-        if np.allclose(x.imag, 0.0, rtol=0.0, atol=atol):
-            return _prune_zeros(x.real)
-        else:
-            return _prune_zeros(x.real) + 1j * _prune_zeros(x.imag)
-    else:
+    if not np.iscomplexobj(x):
         return _prune_zeros(x)
+    # Check if complex part is nonzero at all
+    if np.allclose(x.imag, 0.0, rtol=0.0, atol=atol):
+        return _prune_zeros(x.real)
+    else:
+        return _prune_zeros(x.real) + 1j * _prune_zeros(x.imag)
 
 
 def is_approx_int(x: Array, atol: float = 1e-08) -> Array:

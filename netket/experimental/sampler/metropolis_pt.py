@@ -56,16 +56,13 @@ class MetropolisPtSamplerState(MetropolisSamplerState):
 
     def __repr__(self):
         if self.n_steps > 0:
-            acc_string = "# accepted = {}/{} ({}%), ".format(
-                self.n_accepted, self.n_steps, self.acceptance * 100
-            )
+            acc_string = f"# accepted = {self.n_accepted}/{self.n_steps} ({self.acceptance * 100}%), "
         else:
             acc_string = ""
 
-        text = "MetropolisNumpySamplerState(" + acc_string + f"rng state={self.rng})"
+        text = f"MetropolisNumpySamplerState({acc_string}" + f"rng state={self.rng})"
 
-        text = "MetropolisPtSamplerState(" + acc_string + f"rng state={self.rng}"
-        return text
+        return f"MetropolisPtSamplerState({acc_string}" + f"rng state={self.rng}"
 
 
 class MetropolisPtSampler(MetropolisSampler):
@@ -122,42 +119,37 @@ class MetropolisPtSampler(MetropolisSampler):
     def n_batches(self):
         return self.n_chains * self.n_replicas
 
-    def _init_state(
-        sampler, machine, params: PyTree, key: PRNGKeyT
-    ) -> MetropolisPtSamplerState:
+    def _init_state(self, machine, params: PyTree, key: PRNGKeyT) -> MetropolisPtSamplerState:
         key_state, key_rule = jax.random.split(key, 2)
-        σ = jnp.zeros(
-            (sampler.n_batches, sampler.hilbert.size),
-            dtype=sampler.dtype,
-        )
-        rule_state = sampler.rule.init_state(sampler, machine, params, key_rule)
+        σ = jnp.zeros((self.n_batches, self.hilbert.size), dtype=self.dtype)
+        rule_state = self.rule.init_state(self, machine, params, key_rule)
 
-        beta = 1.0 - jnp.arange(sampler.n_replicas) / sampler.n_replicas
-        beta = jnp.tile(beta, (sampler.n_chains, 1))
+        beta = 1.0 - jnp.arange(self.n_replicas) / self.n_replicas
+        beta = jnp.tile(beta, (self.n_chains, 1))
 
         return MetropolisPtSamplerState(
             σ=σ,
             rng=key_state,
             rule_state=rule_state,
             beta=beta,
-            beta_0_index=jnp.zeros((sampler.n_chains,), dtype=jnp.int64),
+            beta_0_index=jnp.zeros((self.n_chains,), dtype=jnp.int64),
             n_accepted_per_beta=jnp.zeros(
-                (sampler.n_chains, sampler.n_replicas), dtype=jnp.int64
+                (self.n_chains, self.n_replicas), dtype=jnp.int64
             ),
-            beta_position=jnp.zeros((sampler.n_chains,)),
-            beta_diffusion=jnp.zeros((sampler.n_chains,)),
+            beta_position=jnp.zeros((self.n_chains,)),
+            beta_diffusion=jnp.zeros((self.n_chains,)),
             exchange_steps=0,
         )
 
-    def _reset(sampler, machine, parameters: PyTree, state: MetropolisPtSamplerState):
+    def _reset(self, machine, parameters: PyTree, state: MetropolisPtSamplerState):
         new_rng, rng = jax.random.split(state.rng)
 
-        σ = sampler.rule.random_state(sampler, machine, parameters, state, rng)
+        σ = self.rule.random_state(self, machine, parameters, state, rng)
 
-        rule_state = sampler.rule.reset(sampler, machine, parameters, state)
+        rule_state = self.rule.reset(self, machine, parameters, state)
 
-        beta = 1.0 - jnp.arange(sampler.n_replicas) / sampler.n_replicas
-        beta = jnp.tile(beta, (sampler.n_chains, 1))
+        beta = 1.0 - jnp.arange(self.n_replicas) / self.n_replicas
+        beta = jnp.tile(beta, (self.n_chains, 1))
 
         return state.replace(
             σ=σ,
@@ -165,13 +157,11 @@ class MetropolisPtSampler(MetropolisSampler):
             rule_state=rule_state,
             n_accepted_proc=0,
             n_accepted_per_beta=jnp.zeros(
-                (sampler.n_chains, sampler.n_replicas), dtype=jnp.int64
+                (self.n_chains, self.n_replicas), dtype=jnp.int64
             ),
-            beta_position=jnp.zeros((sampler.n_chains,)),
-            beta_diffusion=jnp.zeros(sampler.n_chains),
+            beta_position=jnp.zeros((self.n_chains,)),
+            beta_diffusion=jnp.zeros(self.n_chains),
             exchange_steps=0,
-            # beta=beta,
-            # beta_0_index=jnp.zeros((sampler.n_chains,), dtype=jnp.int64),
         )
 
     def _sample_next(

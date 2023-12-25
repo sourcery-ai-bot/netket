@@ -71,14 +71,13 @@ class RNNLayer(nn.Module):
             # Get the hidden memory at the previous site,
             # or zeros for the first site
             hidden = outputs[:, index - 1, :]
-            hidden = jnp.expand_dims(hidden, axis=-1)
+            return jnp.expand_dims(hidden, axis=-1)
         else:
             # Get the hidden memories at the previous neighbors
             prev_neighbors_i = prev_neighbors[index]
             hidden = outputs[:, prev_neighbors_i, :]
             # mask out inexistant previous neighbords
-            hidden = jnp.where(prev_neighbors_i[None, :, None] == -1, 0, hidden)
-        return hidden
+            return jnp.where(prev_neighbors_i[None, :, None] == -1, 0, hidden)
 
     def __call__(self, inputs):
         """

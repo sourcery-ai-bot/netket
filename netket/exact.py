@@ -89,13 +89,7 @@ def lanczos_ed(
 
     result = eigsh(A, **actual_scipy_args)
 
-    if not compute_eigenvectors:
-        # The sort order of eigenvalues returned by scipy changes based on
-        # `return_eigenvalues`. Therefore we invert the order here so that the
-        # smallest eigenvalue is still the first one.
-        return result[::-1]
-    else:
-        return result
+    return result[::-1] if not compute_eigenvectors else result
 
 
 def full_ed(operator: _AbstractOperator, *, compute_eigenvectors: bool = False):
@@ -126,10 +120,7 @@ def full_ed(operator: _AbstractOperator, *, compute_eigenvectors: bool = False):
 
     dense_op = operator.to_dense()
 
-    if compute_eigenvectors:
-        return eigh(dense_op)
-    else:
-        return eigvalsh(dense_op)
+    return eigh(dense_op) if compute_eigenvectors else eigvalsh(dense_op)
 
 
 def steady_state(lindblad, *, sparse=True, method="ed", rho0=None, **kwargs):

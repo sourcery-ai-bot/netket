@@ -38,9 +38,9 @@ def test_hdf5log(vstate, tmp_path):
     # skip test if hdf5py not installed
     h5py = pytest.importorskip("h5py")
 
-    path = str(tmp_path) + "/dir1/dir2"
+    path = f"{str(tmp_path)}/dir1/dir2"
 
-    log = nkx.logging.HDF5Log(path + "/output")
+    log = nkx.logging.HDF5Log(f"{path}/output")
 
     for i in range(30):
         log(i, {"Energy": jnp.array(1.0), "complex": jnp.array(1.0 + 1j)}, vstate)
@@ -48,8 +48,8 @@ def test_hdf5log(vstate, tmp_path):
     log.flush()
     del log
 
-    files = glob.glob(path + "/*")
-    assert len(files) >= 1
+    files = glob.glob(f"{path}/*")
+    assert files
 
     f = h5py.File(files[0], "r")
     energy = np.array(f["data/Energy/value"])
@@ -69,9 +69,9 @@ def test_lazy_init(tmp_path):
     # skip test if hdf5py not installed
     pytest.importorskip("h5py")
 
-    path = str(tmp_path) + "/dir1"
+    path = f"{str(tmp_path)}/dir1"
 
     nkx.logging.HDF5Log(path)
 
-    files = glob.glob(path + "/*")
-    assert len(files) == 0
+    files = glob.glob(f"{path}/*")
+    assert not files

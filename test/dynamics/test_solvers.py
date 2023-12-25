@@ -83,7 +83,7 @@ def test_tableau(tableau: str):
     assert np.all(td.c >= 0.0)
     assert np.all(td.c <= 1.0)
 
-    assert len(td.order) in (1, 2)
+    assert len(td.order) in {1, 2}
     assert len(td.order) == td.b.ndim
 
     assert td.a.shape[0] == td.a.shape[1]

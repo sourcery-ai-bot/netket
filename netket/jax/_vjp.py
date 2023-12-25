@@ -45,10 +45,7 @@ def _cmplx(re, im, conj=False):
     if is_re_0 or is_im_0:
         return re
     else:
-        if conj:
-            return re - 1j * im
-        else:
-            return re + 1j * im
+        return re - 1j * im if conj else re + 1j * im
 
 
 def vjp_fun_cc(out_dtype, conjugate, _vjp_fun, ȳ):
@@ -72,10 +69,7 @@ def vjp_cc(
 
     vjp_fun = Partial(HashablePartial(vjp_fun_cc, out.dtype, conjugate), _vjp_fun)
 
-    if has_aux:
-        return out, vjp_fun, aux
-    else:
-        return out, vjp_fun
+    return (out, vjp_fun, aux) if has_aux else (out, vjp_fun)
 
 
 def vjp_fun_rr(primals_out_dtype, conjugate, _vjp_fun, ȳ):
@@ -104,10 +98,7 @@ def vjp_rr(
         HashablePartial(vjp_fun_rr, primals_out.dtype, conjugate), _vjp_fun
     )
 
-    if has_aux:
-        return primals_out, vjp_fun, aux
-    else:
-        return primals_out, vjp_fun
+    return (primals_out, vjp_fun, aux) if has_aux else (primals_out, vjp_fun)
 
 
 def vjp_fun_rc(vals_r_dtype, vals_j_dtype, conjugate, vjp_r_fun, vjp_j_fun, ȳ):
@@ -164,10 +155,7 @@ def vjp_rc(
         vjp_j_fun,
     )
 
-    if has_aux:
-        return primals_out, vjp_fun, aux
-    else:
-        return primals_out, vjp_fun
+    return (primals_out, vjp_fun, aux) if has_aux else (primals_out, vjp_fun)
 
 
 # This function dispatches to the right
@@ -178,12 +166,12 @@ def vjp(
     out_shape = eval_shape(fun, *primals, has_aux=has_aux)
 
     if tree_leaf_iscomplex(primals):
-        if jnp.iscomplexobj(out_shape):  # C -> C
-            return vjp_cc(fun, *primals, has_aux=has_aux, conjugate=conjugate)
-        else:  # C -> R
-            return vjp_cc(fun, *primals, has_aux=has_aux, conjugate=conjugate)
-    else:
-        if jnp.iscomplexobj(out_shape):  # R -> C
-            return vjp_rc(fun, *primals, has_aux=has_aux, conjugate=conjugate)
-        else:  # R -> R
-            return vjp_rr(fun, *primals, has_aux=has_aux, conjugate=conjugate)
+        return (
+            vjp_cc(fun, *primals, has_aux=has_aux, conjugate=conjugate)
+            if jnp.iscomplexobj(out_shape)
+            else vjp_cc(fun, *primals, has_aux=has_aux, conjugate=conjugate)
+        )
+    if jnp.iscomplexobj(out_shape):  # R -> C
+        return vjp_rc(fun, *primals, has_aux=has_aux, conjugate=conjugate)
+    else:  # R -> R
+        return vjp_rr(fun, *primals, has_aux=has_aux, conjugate=conjugate)

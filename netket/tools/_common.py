@@ -34,10 +34,7 @@ def version(lib_name) -> str:
     Returns the version of a library as a string or
     unavailable if it cannot be imported
     """
-    if is_available(lib_name):
-        return _version(lib_name)
-    else:
-        return "unavailable"
+    return _version(lib_name) if is_available(lib_name) else "unavailable"
 
 
 def _version(lib_name):
@@ -46,10 +43,7 @@ def _version(lib_name):
     If version cannot be determined returns "available"
     """
     lib = importlib.import_module(lib_name)
-    if hasattr(lib, "__version__"):
-        return lib.__version__
-    else:
-        return "available"
+    return lib.__version__ if hasattr(lib, "__version__") else "available"
 
 
 def get_executable_path(name):
@@ -57,11 +51,7 @@ def get_executable_path(name):
     Get the path of an executable.
     """
     # I. Hate. Windows.
-    if sys.platform.startswith("win32"):
-        os_which = "where"
-    else:
-        os_which = "which"
-
+    os_which = "where" if sys.platform.startswith("win32") else "which"
     try:
         path = exec_in_terminal([os_which, name])
     except (CalledProcessError, FileNotFoundError):

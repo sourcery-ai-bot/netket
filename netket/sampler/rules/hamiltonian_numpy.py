@@ -64,12 +64,12 @@ class HamiltonianRuleNumpy(MetropolisRule):
             )
         self.operator = operator
 
-    def init_state(rule, sampler, machine, params, key):
-        if sampler.hilbert != rule.operator.hilbert:
+    def init_state(self, sampler, machine, params, key):
+        if sampler.hilbert != self.operator.hilbert:
             raise ValueError(
                 f"""
             The hilbert space of the sampler ({sampler.hilbert}) and the hilbert space
-            of the operator ({rule.operator.hilbert}) for HamiltonianRule must be the same.
+            of the operator ({self.operator.hilbert}) for HamiltonianRule must be the same.
             """
             )
 
@@ -77,18 +77,18 @@ class HamiltonianRuleNumpy(MetropolisRule):
             sections=np.empty(sampler.n_batches, dtype=np.int32)
         )
 
-    def transition(rule, sampler, machine, parameters, state, rng, σ):
+    def transition(self, sampler, machine, parameters, state, rng, σ):
         σ = state.σ
         σ1 = state.σ1
         log_prob_corr = state.log_prob_corr
 
         sections = state.rule_state.sections
-        σp = rule.operator.get_conn_flattened(σ, sections)[0]
+        σp = self.operator.get_conn_flattened(σ, sections)[0]
 
         rand_vec = rng.uniform(0, 1, size=σ.shape[0])
 
         _choose(σp, sections, σ1, log_prob_corr, rand_vec)
-        rule.operator.n_conn(σ1, sections)
+        self.operator.n_conn(σ1, sections)
         log_prob_corr -= np.log(sections)
 
     def __repr__(self):

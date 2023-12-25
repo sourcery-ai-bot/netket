@@ -308,15 +308,8 @@ def jacobian(
     if model_state is None:
         model_state = {}
 
-    if dense:
-        jac_type = jacobian_dense
-    else:
-        jac_type = jacobian_pytree
-
-    if mode == "real":
-        split_complex_params = True  # convert C→R and R&C→R to R→R
-        jacobian_fun = jac_type.jacobian_real_holo_fun
-    elif mode == "complex":
+    jac_type = jacobian_dense if dense else jacobian_pytree
+    if mode == "complex":
         split_complex_params = True  # convert C→C and R&C→C to R→C
 
         # avoid converting to complex and then back
@@ -324,6 +317,9 @@ def jacobian(
         jacobian_fun = jac_type.jacobian_cplx_fun
     elif mode == "holomorphic":
         split_complex_params = False
+        jacobian_fun = jac_type.jacobian_real_holo_fun
+    elif mode == "real":
+        split_complex_params = True  # convert C→R and R&C→R to R→R
         jacobian_fun = jac_type.jacobian_real_holo_fun
     else:
         raise NotImplementedError(

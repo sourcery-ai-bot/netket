@@ -30,7 +30,7 @@ def vstate(request):
 
 
 def test_tar(vstate, tmp_path):
-    path = str(tmp_path) + "/dir1/dir2"
+    path = f"{str(tmp_path)}/dir1/dir2"
 
     # check that overwriting works
     for k in range(1, 3):
@@ -40,7 +40,7 @@ def test_tar(vstate, tmp_path):
             log(i, None, vstate)
 
         log.close()
-        tfile = tarfile.TarFile(path + ".tar", "r")
+        tfile = tarfile.TarFile(f"{path}.tar", "r")
         files = tfile.getnames()
 
         assert len(files) == 10 / k
@@ -53,7 +53,7 @@ def test_tar(vstate, tmp_path):
     with pytest.raises(ValueError):
         log = nk.logging.StateLog(path, "x", tar=True)
 
-    tfile = tarfile.TarFile(path + ".tar", "r")
+    tfile = tarfile.TarFile(f"{path}.tar", "r")
     files = tfile.getnames()
 
     # test appending
@@ -66,7 +66,7 @@ def test_tar(vstate, tmp_path):
     assert log._file_step == 10 + 5
 
     del log
-    tfile = tarfile.TarFile(path + ".tar", "r")
+    tfile = tarfile.TarFile(f"{path}.tar", "r")
     files = tfile.getnames()
 
     assert len(files) == 10 + 5
@@ -76,7 +76,7 @@ def test_tar(vstate, tmp_path):
 
 
 def test_dir(vstate, tmp_path):
-    path = str(tmp_path) + "/dir1/dir2"
+    path = f"{str(tmp_path)}/dir1/dir2"
 
     # check that overwriting works
     for k in range(1, 3):
@@ -85,7 +85,7 @@ def test_dir(vstate, tmp_path):
         for i in range(10):
             log(i, None, vstate)
 
-        files = glob.glob(path + "/*.mpack")
+        files = glob.glob(f"{path}/*.mpack")
         assert len(files) == 10 / k
         assert log._file_step == len(files)
 
@@ -105,7 +105,7 @@ def test_dir(vstate, tmp_path):
 
     assert log._file_step == 10 + 5
 
-    files = glob.glob(path + "/*.mpack")
+    files = glob.glob(f"{path}/*.mpack")
 
     assert len(files) == 10 + 5
 
@@ -114,10 +114,10 @@ def test_dir(vstate, tmp_path):
 
 
 def test_lazy_init(tmp_path):
-    path = str(tmp_path) + "/dir1/dir2"
+    path = f"{str(tmp_path)}/dir1/dir2"
 
     # check that overwriting works
     nk.logging.StateLog(path, "w", tar=False, save_every=1)
 
-    files = glob.glob(path + "/*")
-    assert len(files) == 0
+    files = glob.glob(f"{path}/*")
+    assert not files

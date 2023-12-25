@@ -75,7 +75,7 @@ class RuntimeLog(AbstractLog):
             parent = path.parent
             filename = path.name
             if not filename.endswith((".log", ".json")):
-                filename = filename + ".json"
+                filename = f"{filename}.json"
             path = parent / filename
 
             with open(path, "wb") as io:

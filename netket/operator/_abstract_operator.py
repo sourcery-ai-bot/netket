@@ -91,12 +91,11 @@ class AbstractOperator(AbstractObservable):
             if concrete is not True, self or a lazy wrapper; the
             transposed operator otherwise
         """
-        if not concrete:
-            from ._lazy import Transpose
-
-            return Transpose(self)
-        else:
+        if concrete:
             raise NotImplementedError
+        from ._lazy import Transpose
+
+        return Transpose(self)
 
     def conjugate(self, *, concrete=False) -> "AbstractOperator":
         """Returns the complex-conjugate of this operator.

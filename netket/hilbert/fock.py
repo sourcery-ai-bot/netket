@@ -80,12 +80,11 @@ class Fock(HomogeneousHilbert):
 
             if self._n_max is None:
                 self._n_max = n_particles
-            else:
-                if self._n_max * N < n_particles:
-                    raise Exception(
-                        """The required total number of bosons is not compatible
+            elif self._n_max * N < n_particles:
+                raise Exception(
+                    """The required total number of bosons is not compatible
                         with the given n_max."""
-                    )
+                )
 
             constraints = partial(_sum_constraint, n_particles=n_particles)
 

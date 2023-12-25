@@ -29,7 +29,7 @@ def Renyi2(vstate: FullSumState, op: Renyi2EntanglementEntropy):
 
     N = vstate.hilbert.size
 
-    if len(op.partition) == N or len(op.partition) == 0:
+    if len(op.partition) in [N, 0]:
         out = 0
     else:
         mask = np.zeros(N, dtype=bool)
@@ -41,6 +41,4 @@ def Renyi2(vstate: FullSumState, op: Renyi2EntanglementEntropy):
         out = np.log2(np.trace(np.linalg.matrix_power(rdm, n))) / (1 - n)
         out = np.absolute(out.real)
 
-    S2_stats = Stats(mean=out, error_of_mean=0.0, variance=0.0)
-
-    return S2_stats
+    return Stats(mean=out, error_of_mean=0.0, variance=0.0)

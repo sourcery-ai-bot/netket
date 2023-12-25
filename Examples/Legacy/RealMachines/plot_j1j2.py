@@ -46,15 +46,14 @@ while True:
         p = np.poly1d(z)
 
         plt.plot(fitx, p(fitx))
-        if nres > 100:
-            plt.xlim([nres - 100, nres])
-            maxval = np.max(energy[-100:-1])
-            plt.ylim([exact - (np.abs(exact) * 0.01), maxval + np.abs(maxval) * 0.01])
+        plt.xlim([nres - 100, nres])
+        maxval = np.max(energy[-100:-1])
+        plt.ylim([exact - (np.abs(exact) * 0.01), maxval + np.abs(maxval) * 0.01])
         error = (z[0] - exact) / -exact
         plt.gca().text(
             0.95,
             0.8,
-            "Relative Error : " + f"{error:.2e}",
+            f"Relative Error : {error:.2e}",
             verticalalignment="bottom",
             horizontalalignment="right",
             color="green",

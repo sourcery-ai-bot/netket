@@ -20,8 +20,8 @@ class PytreeMeta(ABCMeta):
     frozen PyTrees to immutable after __init__.
     """
 
-    def __call__(cls: type[P], *args: tp.Any, **kwargs: tp.Any) -> P:
-        obj: P = cls.__new__(cls, *args, **kwargs)
+    def __call__(self, *args: tp.Any, **kwargs: tp.Any) -> P:
+        obj: P = self.__new__(self, *args, **kwargs)
         obj.__dict__["_pytree__initializing"] = True
         try:
             obj.__init__(*args, **kwargs)
@@ -38,7 +38,7 @@ class PytreeMeta(ABCMeta):
                 )
             )
         else:
-            vars_dict["_pytree__node_fields"] = cls._pytree__data_fields
+            vars_dict["_pytree__node_fields"] = self._pytree__data_fields
 
         for field in obj._pytree__cachedprop_fields:
             vars_dict[field] = Uninitialized
@@ -161,7 +161,7 @@ class Pytree(metaclass=PytreeMeta):
                 if field not in static_fields and field not in data_fields:
                     data_fields.add(field)
 
-        if mutable and len(cached_prop_fields) != 0:
+        if mutable and cached_prop_fields:
             raise ValueError("cannot use cached properties with " "mutable pytrees.")
 
         if config.netket_sphinx_build:
@@ -306,12 +306,11 @@ class Pytree(metaclass=PytreeMeta):
     ) -> dict[str, tp.Any]:
         from flax import serialization
 
-        state_dict = {
+        return {
             name: serialization.to_state_dict(getattr(pytree, name))
             for name in pytree.__dict__
             if name not in static_field_names
         }
-        return state_dict
 
     @classmethod
     def _from_flax_state_dict(
@@ -356,8 +355,7 @@ class Pytree(metaclass=PytreeMeta):
         if dataclasses.is_dataclass(self):
             return dataclasses.replace(self, **kwargs)
 
-        unknown_keys = set(kwargs) - set(vars(self))
-        if unknown_keys:
+        if unknown_keys := set(kwargs) - set(vars(self)):
             raise ValueError(
                 f"Trying to replace unknown fields {unknown_keys} "
                 f"for '{type(self).__name__}'"
@@ -378,19 +376,19 @@ class Pytree(metaclass=PytreeMeta):
                         f"Cannot set field {field} in init that was not described "
                         "as a class attribute above."
                     )
-            else:
-                if field in self._pytree__setter_descriptors:
-                    pass
-                elif field in self._pytree__cachedprop_fields:
-                    pass
-                elif not hasattr(self, field):
-                    raise AttributeError(
-                        f"Cannot add new fields to {type(self)} after initialization"
-                    )
-                elif not self._pytree__class_is_mutable:
-                    raise AttributeError(
-                        f"{type(self)} is immutable, trying to update field {field}"
-                    )
+            elif (
+                field in self._pytree__setter_descriptors
+                or field in self._pytree__cachedprop_fields
+            ):
+                pass
+            elif not hasattr(self, field):
+                raise AttributeError(
+                    f"Cannot add new fields to {type(self)} after initialization"
+                )
+            elif not self._pytree__class_is_mutable:
+                raise AttributeError(
+                    f"{type(self)} is immutable, trying to update field {field}"
+                )
 
             object.__setattr__(self, field, value)
 

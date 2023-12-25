@@ -84,11 +84,10 @@ class Heisenberg(GraphOperator):
                         raise ValueError(
                             "sign_rule=True specified for a non-bipartite lattice"
                         )
-        else:
-            if sign_rule is None:
-                sign_rule = graph.is_bipartite()
-            elif sign_rule and not graph.is_bipartite():
-                raise ValueError("sign_rule=True specified for a non-bipartite lattice")
+        elif sign_rule is None:
+            sign_rule = graph.is_bipartite()
+        elif sign_rule and not graph.is_bipartite():
+            raise ValueError("sign_rule=True specified for a non-bipartite lattice")
 
         self._J = J
         self._sign_rule = sign_rule

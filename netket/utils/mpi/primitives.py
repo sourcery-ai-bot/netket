@@ -54,10 +54,9 @@ def mpi_sum_jax(x, *, token=None, comm=MPI_jax_comm):
     """
     if n_nodes == 1:
         return x, token
-    else:
-        import mpi4jax
+    import mpi4jax
 
-        return mpi4jax.allreduce(x, op=MPI.SUM, comm=comm, token=token)
+    return mpi4jax.allreduce(x, op=MPI.SUM, comm=comm, token=token)
 
 
 def mpi_prod(x, *, comm=MPI_py_comm):
@@ -96,10 +95,9 @@ def mpi_prod_jax(x, *, token=None, comm=MPI_jax_comm):
     """
     if n_nodes == 1:
         return x, token
-    else:
-        import mpi4jax
+    import mpi4jax
 
-        return mpi4jax.allreduce(x, op=MPI.PROD, comm=comm, token=token)
+    return mpi4jax.allreduce(x, op=MPI.PROD, comm=comm, token=token)
 
 
 def mpi_mean(x, *, comm=MPI_py_comm):
@@ -168,10 +166,9 @@ def mpi_any_jax(x, *, token=None, comm=MPI_jax_comm):
     """
     if n_nodes == 1:
         return x, token
-    else:
-        import mpi4jax
+    import mpi4jax
 
-        return mpi4jax.allreduce(x, op=MPI.LOR, comm=comm, token=token)
+    return mpi4jax.allreduce(x, op=MPI.LOR, comm=comm, token=token)
 
 
 def mpi_all(x, *, comm=MPI_py_comm):
@@ -208,10 +205,9 @@ def mpi_all_jax(x, *, token=None, comm=MPI_jax_comm):
     """
     if n_nodes == 1:
         return x, token
-    else:
-        import mpi4jax
+    import mpi4jax
 
-        return mpi4jax.allreduce(x, op=MPI.LAND, comm=comm, token=token)
+    return mpi4jax.allreduce(x, op=MPI.LAND, comm=comm, token=token)
 
 
 def mpi_max(x, *, comm=MPI_py_comm):
@@ -248,17 +244,13 @@ def mpi_max_jax(x, *, token=None, comm=MPI_jax_comm):
     """
     if n_nodes == 1:
         return x, token
-    else:
-        import mpi4jax
+    import mpi4jax
 
-        return mpi4jax.allreduce(x, op=MPI.MAX, comm=comm, token=token)
+    return mpi4jax.allreduce(x, op=MPI.MAX, comm=comm, token=token)
 
 
 def mpi_bcast(x, *, root, comm=MPI_py_comm):
-    if n_nodes == 1:
-        return x
-    else:
-        return comm.bcast(x, root=root)
+    return x if n_nodes == 1 else comm.bcast(x, root=root)
 
 
 def mpi_bcast_jax(x, *, token=None, root, comm=MPI_jax_comm):
@@ -272,28 +264,23 @@ def mpi_bcast_jax(x, *, token=None, root, comm=MPI_jax_comm):
 
 
 def mpi_allgather(x, *, token=None, comm=MPI_py_comm):
-    if n_nodes == 1:
-        return x, token
-    else:
-        return comm.allgather(x)
+    return (x, token) if n_nodes == 1 else comm.allgather(x)
 
 
 def mpi_gather_jax(x, *, token=None, root: int = 0, comm=MPI_jax_comm):
     if n_nodes == 1:
         return jnp.expand_dims(x, 0), token
-    else:
-        import mpi4jax
+    import mpi4jax
 
-        return mpi4jax.gather(x, token=token, root=root, comm=comm)
+    return mpi4jax.gather(x, token=token, root=root, comm=comm)
 
 
 def mpi_allgather_jax(x, *, token=None, comm=MPI_jax_comm):
     if n_nodes == 1:
         return jnp.expand_dims(x, 0), token
-    else:
-        import mpi4jax
+    import mpi4jax
 
-        return mpi4jax.allgather(x, token=token, comm=comm)
+    return mpi4jax.allgather(x, token=token, comm=comm)
 
 
 def mpi_scatter_jax(x, *, token=None, root: int = 0, comm=MPI_jax_comm):
@@ -310,25 +297,22 @@ def mpi_scatter_jax(x, *, token=None, root: int = 0, comm=MPI_jax_comm):
 def mpi_alltoall_jax(x, *, token=None, comm=MPI_jax_comm):
     if n_nodes == 1:
         return x, token
-    else:
-        import mpi4jax
+    import mpi4jax
 
-        return mpi4jax.alltoall(x, token=token, comm=comm)
+    return mpi4jax.alltoall(x, token=token, comm=comm)
 
 
 def mpi_reduce_sum_jax(x, *, token=None, root: int = 0, comm=MPI_jax_comm):
     if n_nodes == 1:
         return x, token
-    else:
-        import mpi4jax
+    import mpi4jax
 
-        return mpi4jax.reduce(x, op=MPI.SUM, root=root, token=token, comm=comm)
+    return mpi4jax.reduce(x, op=MPI.SUM, root=root, token=token, comm=comm)
 
 
 def mpi_allreduce_sum_jax(x, *, token=None, root: int = 0, comm=MPI_jax_comm):
     if n_nodes == 1:
         return x, token
-    else:
-        import mpi4jax
+    import mpi4jax
 
-        return mpi4jax.allreduce(x, op=MPI.SUM, token=token, comm=comm)
+    return mpi4jax.allreduce(x, op=MPI.SUM, token=token, comm=comm)

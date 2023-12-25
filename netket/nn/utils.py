@@ -52,16 +52,15 @@ def split_array_mpi(array: Array) -> Array:
         A numpy array, of potentially different state on every mpi rank.
     """
 
-    if mpi.n_nodes > 1:
-        n_states = array.shape[0]
-        states_n = np.arange(n_states)
-
-        # divide the hilbert space in chunks for each node
-        states_per_rank = np.array_split(states_n, mpi.n_nodes)
-
-        return array[states_per_rank[mpi.rank]]
-    else:
+    if mpi.n_nodes <= 1:
         return array
+    n_states = array.shape[0]
+    states_n = np.arange(n_states)
+
+    # divide the hilbert space in chunks for each node
+    states_per_rank = np.array_split(states_n, mpi.n_nodes)
+
+    return array[states_per_rank[mpi.rank]]
 
 
 def to_array(
@@ -205,7 +204,7 @@ def _to_array_rank(
     psi = psi.reshape(-1)
 
     # remove fake states
-    psi = psi[0:n_states]
+    psi = psi[:n_states]
     return psi
 
 
@@ -274,8 +273,8 @@ def _get_output_idx(
 def _separate_binary_indices(
     shape: tuple[int, ...]
 ) -> tuple[tuple[int, ...], tuple[int, ...]]:
-    binary_indices = tuple([i for i in range(len(shape)) if shape[i] == 2])
-    non_binary_indices = tuple([i for i in range(len(shape)) if shape[i] != 2])
+    binary_indices = tuple(i for i in range(len(shape)) if shape[i] == 2)
+    non_binary_indices = tuple(i for i in range(len(shape)) if shape[i] != 2)
     return binary_indices, non_binary_indices
 
 

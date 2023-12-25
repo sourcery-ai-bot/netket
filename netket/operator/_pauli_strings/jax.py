@@ -267,10 +267,7 @@ def _pauli_strings_mels_jax(local_states, z_data, x):
         else:  # use indexing
             assert z_sign_indices is not None
             was_state = x[..., z_sign_indices] == state1
-            if z_sign_indexmask is None:  # no padding, so no mask necessary
-                mask = 1
-            else:
-                mask = z_sign_indexmask
+            mask = 1 if z_sign_indexmask is None else z_sign_indexmask
         # sgn = (-1)**(was_state*mask).sum(axis=-1)
         sgn = (1 - 2 * (was_state * mask).astype(np.int8)).prod(
             axis=-1, promote_integers=False

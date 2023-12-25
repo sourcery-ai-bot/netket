@@ -24,19 +24,16 @@ from netket.utils.dispatch import dispatch
 def random_state(hilb: Fock, key, batches: int, *, dtype=np.float32):
     shape = (batches, hilb.size)
 
-    # If unconstrained space, use fast sampling
-    if hilb.n_particles is None:
-        rs = jax.random.randint(key, shape=shape, minval=0, maxval=hilb.n_max + 1)
-        return jnp.asarray(rs, dtype=dtype)
-
-    else:
-        state = jax.pure_callback(
-            lambda rng: _random_states_with_constraint(hilb, rng, batches, dtype),
+    if hilb.n_particles is not None:
+        return jax.pure_callback(
+            lambda rng: _random_states_with_constraint(
+                hilb, rng, batches, dtype
+            ),
             jax.ShapeDtypeStruct(shape, dtype),
             key,
         )
-
-        return state
+    rs = jax.random.randint(key, shape=shape, minval=0, maxval=hilb.n_max + 1)
+    return jnp.asarray(rs, dtype=dtype)
 
 
 def _random_states_with_constraint(hilb, rngkey, n_batches, dtype):
@@ -47,7 +44,7 @@ def _random_states_with_constraint(hilb, rngkey, n_batches, dtype):
         sites = list(range(hilb.size))
         ss = hilb.size
 
-        for i in range(hilb.n_particles):
+        for _ in range(hilb.n_particles):
             s = rgen.integers(0, ss, size=())
 
             out[b, sites[s]] += 1

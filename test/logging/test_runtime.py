@@ -60,7 +60,7 @@ def test_serialize(vstate, tmp_path):
     with open(filename, "rb") as f:
         data1 = orjson.loads(f.read())
 
-    log.serialize(str(tmp_path) + "/file_2.log")
+    log.serialize(f"{str(tmp_path)}/file_2.log")
     filename = tmp_path / "file_2.log"
     with open(filename, "rb") as f:
         data2 = orjson.loads(f.read())

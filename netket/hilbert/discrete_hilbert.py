@@ -196,10 +196,7 @@ class DiscreteHilbert(AbstractHilbert):
 
         out = self._states_to_numbers(states_r, out=out.reshape(-1))
 
-        if states.ndim == 1:
-            return out[0]
-        else:
-            return out.reshape(states.shape[:-1])
+        return out[0] if states.ndim == 1 else out.reshape(states.shape[:-1])
 
     def states(self) -> Iterator[np.ndarray]:
         r"""Returns an iterator over all valid configurations of the Hilbert space.
@@ -252,9 +249,7 @@ class DiscreteHilbert(AbstractHilbert):
     @property
     def is_indexable(self) -> bool:
         """Whether the space can be indexed with an integer"""
-        if not self.is_finite:
-            return False
-        return _is_indexable(self.shape)
+        return False if not self.is_finite else _is_indexable(self.shape)
 
     def __mul__(self, other: "DiscreteHilbert"):
         if type(self) == type(other):

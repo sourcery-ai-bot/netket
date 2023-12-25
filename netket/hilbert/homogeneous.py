@@ -177,17 +177,18 @@ class HomogeneousHilbert(DiscreteHilbert):
             if not self.is_indexable:
                 raise RuntimeError("The hilbert space is too large to be indexed.")
 
-            if self.constrained:
-                self.__hilbert_index = ConstrainedHilbertIndex(
-                    np.asarray(self.local_states, dtype=np.float64),
-                    self.size,
-                    self._constraint_fn,
-                )
             else:
-                self.__hilbert_index = UnconstrainedHilbertIndex(
-                    np.asarray(self.local_states, dtype=np.float64), self.size
+                self.__hilbert_index = (
+                    ConstrainedHilbertIndex(
+                        np.asarray(self.local_states, dtype=np.float64),
+                        self.size,
+                        self._constraint_fn,
+                    )
+                    if self.constrained
+                    else UnconstrainedHilbertIndex(
+                        np.asarray(self.local_states, dtype=np.float64), self.size
+                    )
                 )
-
         return self.__hilbert_index
 
     def __repr__(self):

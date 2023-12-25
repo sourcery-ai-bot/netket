@@ -37,10 +37,7 @@ from .. import common
 
 pytestmark = common.skipif_mpi
 
-hilberts = {}
-
-# Spin 1/2
-hilberts["Spin 1/2"] = Spin(s=0.5, N=20)
+hilberts = {"Spin 1/2": Spin(s=0.5, N=20)}
 
 # Spin 1/2 with total Sz
 hilberts["Spin[0.5, N=20, total_sz=1"] = Spin(s=0.5, total_sz=1.0, N=20)

@@ -139,6 +139,4 @@ class SymmExpSum(nn.Module):
             jax.scipy.special.logsumexp if np.all(characters >= 0) else logsumexp_cplx
         )
 
-        # log (sum_i ( c_i/Nsymm* exp(psi[sigma_i])))
-        psi = logsumexp_fun(psi_symm, axis=0, b=characters / len(self.symm_group))
-        return psi
+        return logsumexp_fun(psi_symm, axis=0, b=characters / len(self.symm_group))

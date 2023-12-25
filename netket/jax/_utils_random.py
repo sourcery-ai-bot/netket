@@ -112,5 +112,4 @@ def batch_choice(key, a, p):
     p_cumsum = p.cumsum(axis=1)
     r = p_cumsum[:, -1:] * jax.random.uniform(key, shape=(p.shape[0], 1))
     indices = (r > p_cumsum).sum(axis=1)
-    out = a[indices]
-    return out
+    return a[indices]

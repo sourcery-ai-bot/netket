@@ -51,9 +51,6 @@ def _build_rotation(
             localop *= LocalOperator(hi, U_X, [j])
         elif base == "Y":
             localop *= LocalOperator(hi, U_Y, [j])
-        elif base == "Z" or base == "I":
-            pass
-
     return localop
 
 
@@ -70,7 +67,7 @@ def _canonicalize_bases_type(
         ValueError: When not given a list or np.ndarray
         TypeError: If the type of the operators is not a child of AbstractOperator
     """
-    if not (isinstance(Us, list) or isinstance(Us, np.ndarray)):
+    if not (isinstance(Us, (list, np.ndarray))):
         raise ValueError(
             "The bases should be a list or np.ndarray(dtype=object)" " of the bases."
         )
@@ -150,12 +147,7 @@ def _convert_data(
     for i, (sigma, U) in enumerate(zip(sigma_s, Us)):
         sigma_p_i, mels_i = U.get_conn(sigma)
 
-        if not mixed_state_target:
-            Nc = mels_i.size
-        else:
-            # size of the cartesian product sigma_p x sigma_p
-            Nc = mels_i.size**2
-
+        Nc = mels_i.size if not mixed_state_target else mels_i.size**2
         sigma_p = np.resize(sigma_p, (last_i + Nc, N_target))
         mels = np.resize(mels, (last_i + Nc,))
 
@@ -302,9 +294,7 @@ class RawQuantumDataset:
         unique_bases = []
         _last_basis = None
         for b in self.bases:
-            if b == _last_basis:
-                continue
-            elif b in unique_bases:
+            if b == _last_basis or b in unique_bases:
                 continue
             else:
                 unique_bases.append(b)

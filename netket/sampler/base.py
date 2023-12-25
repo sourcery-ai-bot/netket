@@ -52,13 +52,11 @@ def compute_n_chains(
                     category=UserWarning,
                     stacklevel=2,
                 )
-    elif n_chains_per_rank is not None:
-        pass
-    else:
+    elif n_chains_per_rank is None:
         # Default value
         n_chains_per_rank = default
 
-    if not n_chains_per_rank > 0:
+    if n_chains_per_rank <= 0:
         raise TypeError(
             "n_chains_per_rank must be a positive integer, but "
             f"you specified {n_chains_per_rank}"
@@ -196,18 +194,12 @@ class Sampler(struct.Pytree):
             does not trigger recompilation.
         """
         apply_fun = get_afun_if_module(model)
-        log_pdf = HashablePartial(
+        return HashablePartial(
             lambda apply_fun, pars, σ: self.machine_pow * apply_fun(pars, σ).real,
             apply_fun,
         )
-        return log_pdf
 
-    def init_state(
-        sampler,
-        machine: Union[Callable, nn.Module],
-        parameters: PyTree,
-        seed: Optional[SeedT] = None,
-    ) -> SamplerState:
+    def init_state(self, machine: Union[Callable, nn.Module], parameters: PyTree, seed: Optional[SeedT] = None) -> SamplerState:
         """
         Creates the structure holding the state of the sampler.
 
@@ -236,14 +228,9 @@ class Sampler(struct.Pytree):
         key = nkjax.PRNGKey(seed)
         key = nkjax.mpi_split(key)
 
-        return sampler._init_state(wrap_afun(machine), parameters, key)
+        return self._init_state(wrap_afun(machine), parameters, key)
 
-    def reset(
-        sampler,
-        machine: Union[Callable, nn.Module],
-        parameters: PyTree,
-        state: Optional[SamplerState] = None,
-    ) -> SamplerState:
+    def reset(self, machine: Union[Callable, nn.Module], parameters: PyTree, state: Optional[SamplerState] = None) -> SamplerState:
         """
         Resets the state of the sampler. To be used every time the parameters are changed.
 
@@ -258,18 +245,11 @@ class Sampler(struct.Pytree):
             A valid sampler state.
         """
         if state is None:
-            state = sampler.init_state(machine, parameters)
+            state = self.init_state(machine, parameters)
 
-        return sampler._reset(wrap_afun(machine), parameters, state)
+        return self._reset(wrap_afun(machine), parameters, state)
 
-    def sample(
-        sampler,
-        machine: Union[Callable, nn.Module],
-        parameters: PyTree,
-        *,
-        state: Optional[SamplerState] = None,
-        chain_length: int = 1,
-    ) -> tuple[jnp.ndarray, SamplerState]:
+    def sample(self, machine: Union[Callable, nn.Module], parameters: PyTree, *, state: Optional[SamplerState] = None, chain_length: int = 1) -> tuple[jnp.ndarray, SamplerState]:
         """
         Samples `chain_length` batches of samples along the chains.
 
@@ -285,20 +265,11 @@ class Sampler(struct.Pytree):
             state: The new state of the sampler.
         """
         if state is None:
-            state = sampler.reset(machine, parameters)
+            state = self.reset(machine, parameters)
 
-        return sampler._sample_chain(
-            wrap_afun(machine), parameters, state, chain_length
-        )
+        return self._sample_chain(wrap_afun(machine), parameters, state, chain_length)
 
-    def samples(
-        sampler,
-        machine: Union[Callable, nn.Module],
-        parameters: PyTree,
-        *,
-        state: Optional[SamplerState] = None,
-        chain_length: int = 1,
-    ) -> Iterator[jnp.ndarray]:
+    def samples(self, machine: Union[Callable, nn.Module], parameters: PyTree, *, state: Optional[SamplerState] = None, chain_length: int = 1) -> Iterator[jnp.ndarray]:
         """
         Returns a generator sampling `chain_length` batches of samples along the chains.
 
@@ -310,12 +281,12 @@ class Sampler(struct.Pytree):
             chain_length: The length of the chains (default = 1).
         """
         if state is None:
-            state = sampler.reset(machine, parameters)
+            state = self.reset(machine, parameters)
 
         machine = wrap_afun(machine)
 
         for _i in range(chain_length):
-            samples, state = sampler._sample_chain(machine, parameters, state, 1)
+            samples, state = self._sample_chain(machine, parameters, state, 1)
             yield samples[:, 0, :]
 
     @abc.abstractmethod

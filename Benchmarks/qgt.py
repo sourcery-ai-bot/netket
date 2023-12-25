@@ -29,7 +29,7 @@ class FFNN(nn.Module):
                 kernel_init=self.kernel_init,
                 bias_init=self.bias_init,
             )
-            for layer in range(self.n_layers)
+            for _ in range(self.n_layers)
         ]
 
     @nn.compact

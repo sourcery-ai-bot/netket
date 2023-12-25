@@ -23,13 +23,13 @@ while True:
 
     nres = len(iters)
     cut = nres
-    if nres > cut:
+    if cut > cut:
         fitx = iters[-cut:-1]
         fity = energy[-cut:-1]
         z = np.polyfit(fitx, fity, deg=0)
         p = np.poly1d(z)
 
-        plt.xlim([nres - cut, nres])
+        plt.xlim([0, cut])
         maxval = np.max(energy[-cut:-1])
         plt.ylim([exact - (np.abs(exact) * 0.01), maxval + np.abs(maxval) * 0.01])
         error = (z[0] - exact) / -exact

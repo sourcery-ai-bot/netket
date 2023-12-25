@@ -37,7 +37,7 @@ class LocalRule(MetropolisRule):
     one of them is chosen with uniform probability.
     """
 
-    def transition(rule, sampler, machine, parameters, state, key, σ):
+    def transition(self, sampler, machine, parameters, state, key, σ):
         key1, key2 = jax.random.split(key, 2)
 
         n_chains = σ.shape[0]

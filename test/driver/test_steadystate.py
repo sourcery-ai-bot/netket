@@ -44,11 +44,7 @@ def _setup_ss(dtype=np.float32, sr=True):
     vs = nk.vqs.MCMixedState(sa, ma, sampler_diag=sa_obs, n_samples=1008, seed=SEED)
 
     op = nk.optimizer.Sgd(learning_rate=0.05)
-    if sr:
-        sr_config = nk.optimizer.SR(holomorphic=False)
-    else:
-        sr_config = None
-
+    sr_config = nk.optimizer.SR(holomorphic=False) if sr else None
     driver = nk.SteadyState(lind, op, variational_state=vs, preconditioner=sr_config)
 
     return lind, vs, driver
@@ -61,8 +57,7 @@ def _setup_obs(L):
     for i in range(L):
         obs_sx += nk.operator.spin.sigmax(hi, i)
 
-    obs = {"SigmaX": obs_sx}
-    return obs
+    return {"SigmaX": obs_sx}
 
 
 ####

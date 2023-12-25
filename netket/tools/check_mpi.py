@@ -52,7 +52,7 @@ def check_mpi():
             }
         )
 
-    maxkeylen = max(len(k) for k in info.keys())
+    maxkeylen = max(len(k) for k in info)
 
     for k, v in info.items():
         print(f"{k:{maxkeylen}} : {v}")

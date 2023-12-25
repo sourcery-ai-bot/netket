@@ -77,14 +77,14 @@ class MLP(nn.Module):
                 ]
             else:
                 hidden_dims = []
-        else:
-            if self.hidden_dims_alpha is not None:
-                raise ValueError(
-                    "Cannot specify both hidden_dims and alpha_hidden_dims, "
-                    "choose one way to provide the hidden dimensions"
-                )
+        elif self.hidden_dims_alpha is None:
             hidden_dims = self.hidden_dims
 
+        else:
+            raise ValueError(
+                "Cannot specify both hidden_dims and alpha_hidden_dims, "
+                "choose one way to provide the hidden dimensions"
+            )
         if self.hidden_activations is None:
             hidden_activations = [None] * len(hidden_dims)
         elif hasattr(self.hidden_activations, "__len__"):

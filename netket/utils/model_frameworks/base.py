@@ -78,11 +78,14 @@ class UnknownFramework(ModuleFramework):
 
 
 def identify_framework(module):
-    for _framework in registered_frameworks:
-        if _framework.is_loaded() and _framework.is_my_module(module):
-            return _framework
-
-    return UnknownFramework
+    return next(
+        (
+            _framework
+            for _framework in registered_frameworks
+            if _framework.is_loaded() and _framework.is_my_module(module)
+        ),
+        UnknownFramework,
+    )
 
 
 def maybe_wrap_module(module):

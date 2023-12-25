@@ -128,7 +128,7 @@ def deprecate_dtype(clz):
     @functools.wraps(clz)
     def helper(*args, **kws):
         # deprecated dtype argument
-        if "dtype" in kws.keys():
+        if "dtype" in kws:
             warn_deprecation(_dep_msg)
             dtype = kws.pop("dtype")
             kws["param_dtype"] = dtype

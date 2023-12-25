@@ -80,18 +80,13 @@ class ExactSampler(Sampler):
     def is_exact(sampler):
         return True
 
-    def _init_state(
-        sampler,
-        machine: nn.Module,
-        parameters: PyTree,
-        seed: Optional[SeedT] = None,
-    ):
-        pdf = jnp.zeros(sampler.hilbert.n_states, dtype=jnp.float32)
+    def _init_state(self, machine: nn.Module, parameters: PyTree, seed: Optional[SeedT] = None):
+        pdf = jnp.zeros(self.hilbert.n_states, dtype=jnp.float32)
         return ExactSamplerState(pdf=pdf, rng=seed)
 
-    def _reset(sampler, machine, parameters, state):
+    def _reset(self, machine, parameters, state):
         pdf = jnp.absolute(
-            to_array(sampler.hilbert, machine.apply, parameters) ** sampler.machine_pow
+            to_array(self.hilbert, machine.apply, parameters) ** self.machine_pow
         )
         pdf = pdf / pdf.sum()
 

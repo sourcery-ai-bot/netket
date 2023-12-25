@@ -35,40 +35,35 @@ def random_state(hilb: Spin, key, batches: int, *, dtype=np.float32):
     else:
         N = hilb.size
         n_states = int(2 * S) + 1
-        # if constrained and S == 1/2, use a trick to sample quickly
-        if n_states == 2:
-            m = int(hilb._total_sz * 2)
-            nup = (N + m) // 2
-            ndown = (N - m) // 2
-
-            x = jnp.concatenate(
-                (
-                    jnp.ones((batches, nup), dtype=dtype),
-                    -jnp.ones(
-                        (
-                            batches,
-                            ndown,
-                        ),
-                        dtype=dtype,
-                    ),
+        if n_states != 2:
+            return jax.pure_callback(
+                lambda rng: _random_states_with_constraint(
+                    hilb, rng, batches, dtype
                 ),
-                axis=1,
-            )
-
-            return jax.vmap(jax.random.permutation)(
-                jax.random.split(key, x.shape[0]), x
-            )
-
-        # if constrained and S != 1/2, then use a slow fallback algorithm
-        # TODO: find better, faster way to sample constrained arbitrary spaces.
-        else:
-            state = jax.pure_callback(
-                lambda rng: _random_states_with_constraint(hilb, rng, batches, dtype),
                 jax.ShapeDtypeStruct(shape, dtype),
                 key,
             )
+        m = int(hilb._total_sz * 2)
+        nup = (N + m) // 2
+        ndown = (N - m) // 2
 
-            return state
+        x = jnp.concatenate(
+            (
+                jnp.ones((batches, nup), dtype=dtype),
+                -jnp.ones(
+                    (
+                        batches,
+                        ndown,
+                    ),
+                    dtype=dtype,
+                ),
+            ),
+            axis=1,
+        )
+
+        return jax.vmap(jax.random.permutation)(
+            jax.random.split(key, x.shape[0]), x
+        )
 
 
 # TODO: could numba-jit this
@@ -80,7 +75,7 @@ def _random_states_with_constraint(hilb, rngkey, n_batches, dtype):
         sites = list(range(hilb.size))
         ss = hilb.size
 
-        for i in range(round(hilb._s * hilb.size + hilb._total_sz)):
+        for _ in range(round(hilb._s * hilb.size + hilb._total_sz)):
             s = rgen.integers(0, ss, size=())
 
             out[b, sites[s]] += 2
@@ -101,8 +96,7 @@ def flip_state_scalar(hilb: Spin, key, state, index):
 
 
 def _flipat_N2(key, x, i):
-    res = x.at[i].set(-x[i]), x[i]
-    return res
+    return x.at[i].set(-x[i]), x[i]
 
 
 def _flipat_generic(key, x, i, s):

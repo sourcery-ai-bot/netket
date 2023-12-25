@@ -85,7 +85,7 @@ class JsonLog(RuntimeLog):
         elif mode == "x":
             mode = "fail"
 
-        if not ((mode == "write") or (mode == "append") or (mode == "fail")):
+        if mode not in {"write", "append", "fail"}:
             raise ValueError(
                 "Mode not recognized: should be one of `[w]rite`, `[a]ppend` or"
                 "`[x]`(fail)."
@@ -94,8 +94,8 @@ class JsonLog(RuntimeLog):
         if mode == "append":
             raise ValueError("Append mode is no longer supported.")
 
-        file_exists = _path.exists(output_prefix + ".log") or _path.exists(
-            output_prefix + ".mpack"
+        file_exists = _path.exists(f"{output_prefix}.log") or _path.exists(
+            f"{output_prefix}.mpack"
         )
 
         if file_exists and mode == "fail":
@@ -117,7 +117,7 @@ class JsonLog(RuntimeLog):
         self._steps_notflushed_write = 0
         self._steps_notflushed_pars = 0
         self._save_params = save_params
-        self._files_open = [output_prefix + ".log", output_prefix + ".mpack"]
+        self._files_open = [f"{output_prefix}.log", f"{output_prefix}.mpack"]
 
         self._autoflush_cost = autoflush_cost
         self._last_flush_time = time.time()
@@ -168,7 +168,7 @@ class JsonLog(RuntimeLog):
     def _flush_log(self):
         # Time how long flushing data takes.
         self._last_flush_time = time.time()
-        self.serialize(self._prefix + ".log")
+        self.serialize(f"{self._prefix}.log")
         self._last_flush_runtime = time.time() - self._last_flush_time
 
         self._flush_log_time += self._last_flush_runtime
@@ -184,7 +184,7 @@ class JsonLog(RuntimeLog):
         binary_data = serialization.to_bytes(
             extract_replicated(variational_state.variables)
         )
-        with open(self._prefix + ".mpack", "wb") as outfile:
+        with open(f"{self._prefix}.mpack", "wb") as outfile:
             outfile.write(binary_data)
         self._last_flush_pars_runtime = time.time() - self._last_flush_pars_time
 
@@ -213,8 +213,7 @@ class JsonLog(RuntimeLog):
 
     def __repr__(self):
         _str = f"JsonLog('{self._prefix}', mode={self._file_mode}, "
-        _str = _str + f"autoflush_cost={self._autoflush_cost})"
+        _str = f"{_str}autoflush_cost={self._autoflush_cost})"
         _str = _str + "\n  Runtime cost:"
-        _str = _str + f"\n  \tLog:    {self._flush_log_time}"
-        _str = _str + f"\n  \tParams: {self._flush_pars_time}"
-        return _str
+        _str = f"{_str}\n  \tLog:    {self._flush_log_time}"
+        return f"{_str}\n  \tParams: {self._flush_pars_time}"

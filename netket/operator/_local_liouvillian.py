@@ -168,20 +168,20 @@ class LocalLiouvillian(AbstractSuperOperator):
     def get_conn(self, x):
         n_sites = x.shape[0] // 2
 
-        xr, xc = x[0:n_sites], x[n_sites : 2 * n_sites]
+        xr, xc = x[:n_sites], x[n_sites : 2 * n_sites]
         i = 0
 
         xrp, mel_r = self._Hnh.get_conn(xr)
         self._xrv[i : i + len(mel_r), :] = xrp
         self._xcv[i : i + len(mel_r), :] = xc
         self._mels[i : i + len(mel_r)] = -1j * mel_r
-        i = i + len(mel_r)
+        i += len(mel_r)
 
         xcp, mel_c = self._Hnh.get_conn(xc)
         self._xrv[i : i + len(mel_c), :] = xr
         self._xcv[i : i + len(mel_c), :] = xcp
         self._mels[i : i + len(mel_r)] = 1j * np.conj(mel_c)
-        i = i + len(mel_c)
+        i += len(mel_c)
 
         for L in self._jump_ops:
             L_xrp, L_mel_r = L.get_conn(xr)
@@ -196,7 +196,7 @@ class LocalLiouvillian(AbstractSuperOperator):
                 self._mels[i : i + nc] = L_mel_r[r] * np.conj(L_mel_c)
                 i = i + nc
 
-        return np.copy(self._xprime[0:i, :]), np.copy(self._mels[0:i])
+        return np.copy(self._xprime[0:i, :]), np.copy(self._mels[:i])
 
     # pad option pads all sections to have the same (biggest) size.
     # to avoid using the biggest possible size, we dynamically check what is
@@ -275,11 +275,7 @@ class LocalLiouvillian(AbstractSuperOperator):
             )
             self._mels_f.resize(self._max_conn_size * batch_size, refcheck=False)
 
-        if pad:
-            pad = max_conns_Lrc + max_conns_r + max_conns_c
-        else:
-            pad = 0
-
+        pad = max_conns_Lrc + max_conns_r + max_conns_c if pad else 0
         self._xprime_f[:] = 0
         self._mels_f[:] = 0
 
@@ -387,7 +383,7 @@ class LocalLiouvillian(AbstractSuperOperator):
 
             sections[i] = off
 
-        return np.copy(xs[0:off, :]), np.copy(mels[0:off])
+        return np.copy(xs[0:off, :]), np.copy(mels[:off])
 
     def to_linear_operator(
         self, *, sparse: bool = True, append_trace: bool = False

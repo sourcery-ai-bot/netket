@@ -41,12 +41,6 @@ def tree_log(tree, root, data, *, iter=None):
         for i, val in enumerate(tree):
             tree_log(val, f"{root}/{i}", data, iter=iter)
 
-    # handle namedtuples
-    elif isinstance(tree, list) and hasattr(tree, "_fields"):
-        tree_log(iter, f"{root}/iter", data)
-        for key in tree._fields:
-            tree_log(getattr(tree, key), f"{root}/{key}", data)
-
     elif isinstance(tree, tuple):
         tree_log(iter, f"{root}/iter", data)
         for i, val in enumerate(tree):
@@ -134,7 +128,7 @@ class HDF5Log(AbstractLog):
 
         super().__init__()
 
-        if not ((mode == "write") or (mode == "append") or (mode == "fail")):
+        if mode not in {"write", "append", "fail"}:
             raise ValueError(
                 "Mode not recognized: should be one of `[w]rite`, `[a]ppend` or"
                 "`[x]`(fail)."
@@ -142,7 +136,7 @@ class HDF5Log(AbstractLog):
         mode = _mode_shorthands[mode]
 
         if not path.endswith((".h5", ".hdf5")):
-            path = path + ".h5"
+            path += ".h5"
 
         if os.path.exists(path) and mode == "x":
             raise ValueError(
@@ -202,5 +196,4 @@ class HDF5Log(AbstractLog):
         self.flush()
 
     def __repr__(self):
-        _str = f"HDF5Log('{self._file_name}', mode={self._file_mode}"
-        return _str
+        return f"HDF5Log('{self._file_name}', mode={self._file_mode}"

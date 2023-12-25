@@ -65,10 +65,7 @@ class HaikuFramework(ModuleFramework):
         import haiku  # noqa: E0401
 
         # jax modules are tuples
-        if isinstance(module, haiku.Transformed):
-            return True
-
-        return False
+        return isinstance(module, haiku.Transformed)
 
     @staticmethod
     def wrap(module):

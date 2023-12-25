@@ -32,11 +32,7 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-if args.fast:
-    model_type = nk.models.FastARNNConv1D
-else:
-    model_type = nk.models.ARNNConv1D
-
+model_type = nk.models.FastARNNConv1D if args.fast else nk.models.ARNNConv1D
 if args.dtype == "float32":
     dtype = jnp.float32
 elif args.dtype == "float64":

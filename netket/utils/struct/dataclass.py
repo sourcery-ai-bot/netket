@@ -63,11 +63,11 @@ _DATACLASS_INIT_NAME = "__init_dataclass__"
 
 
 def _hash_cache_name(class_name):
-    return "__" + class_name + "_hash_cache"
+    return f"__{class_name}_hash_cache"
 
 
 def _compute_cache_name(property_name):
-    return "__" + property_name
+    return f"__{property_name}"
 
 
 def _set_annotation(clz, attr, typ):
@@ -89,13 +89,13 @@ def process_cached_properties(clz, globals=None):
     if globals is None:
         globals = {}
 
-    cached_props = {}
     self_name = "self"
 
-    for name, field_info in clz.__dict__.items():
-        if isinstance(field_info, CachedProperty):
-            cached_props[name] = field_info
-
+    cached_props = {
+        name: field_info
+        for name, field_info in clz.__dict__.items()
+        if isinstance(field_info, CachedProperty)
+    }
     # Convert a property to something like this
     # @cached_property
     # def myproperty(self) -> T
@@ -164,13 +164,9 @@ def process_cached_properties(clz, globals=None):
         _set_new_attribute(clz, cache_name, _cache)
         _set_annotation(clz, cache_name, cp.type)
 
-    # create precompute method
-    _precompute_body_method = []
-    for name in cached_props.keys():
-        _precompute_body_method.append(f"{self_name}.{name}")
-
+    _precompute_body_method = [f"{self_name}.{name}" for name in cached_props]
     # Create the precompute method
-    if len(_precompute_body_method) == 0:
+    if not _precompute_body_method:
         _precompute_body_method.append("pass")
 
     fun = _create_fn(

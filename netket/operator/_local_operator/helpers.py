@@ -58,14 +58,13 @@ def _standardize_matrix_input_type(op):
 
 def _kron(A, B):
     if isinstance(A, spmatrix) and isinstance(B, spmatrix):
-        res = sparse.kron(A, B, format="coo")
+        return sparse.kron(A, B, format="coo")
     elif isinstance(A, spmatrix) ^ isinstance(B, spmatrix):
         # XOR, meaning only one is sparse matrix
         # Then we maintain sparse format (Is this a good idea?)
-        res = sparse.kron(A, B, format="coo")
+        return sparse.kron(A, B, format="coo")
     else:
-        res = np.kron(np.asarray(A), np.asarray(B))
-    return res
+        return np.kron(np.asarray(A), np.asarray(B))
 
 
 def _eye_like(size, *, dtype, like):

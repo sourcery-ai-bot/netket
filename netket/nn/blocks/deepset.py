@@ -17,12 +17,14 @@ def _process_features(features) -> tuple[Optional[tuple[int, ...]], Optional[int
     Convert some inputs to a consistent format of features.
     Returns hidden dimensions and output dimensions of the MLP separately.
     """
-    if features is None:
+    if (
+        features is None
+        or not isinstance(features, int)
+        and len(features) == 0
+    ):
         feat, out = None, None
     elif isinstance(features, int):
         feat, out = None, features
-    elif len(features) == 0:
-        feat, out = None, None
     elif len(features) == 1:
         feat, out = None, features[0]
     else:

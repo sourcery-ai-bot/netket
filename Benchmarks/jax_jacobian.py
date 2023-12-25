@@ -33,7 +33,7 @@ n_samples = 1000 // n_chains
 
 
 def j_bench(n_times, samples):
-    for j in range(n_times):
+    for _ in range(n_times):
         j_ma.init_random_parameters(sigma=0.01)
         out = j_ma.der_log(samples.reshape((-1, hi.size)))
 
@@ -41,7 +41,7 @@ def j_bench(n_times, samples):
 
 
 def bench(n_times, samples):
-    for j in range(n_times):
+    for _ in range(n_times):
         ma.init_random_parameters(sigma=0.01)
         out = ma.der_log(samples.reshape((-1, hi.size)))
 
@@ -53,13 +53,13 @@ m = j_bench(1, samples)
 t0 = time.time_ns()
 samples = j_bench(300, samples)
 tf = time.time_ns()
-print("Jax der_log (dtype " + str(dtype) + ")")
+print(f"Jax der_log (dtype {str(dtype)})")
 print("time (s) ", (tf - t0) / 1.0e9)
 
 samples = sa.generate_samples(n_samples)
 m = bench(1, samples)
 t0 = time.time_ns()
 samples = bench(300, samples)
-print("Numpy der_log (dtype " + str(dtype) + ")")
+print(f"Numpy der_log (dtype {str(dtype)})")
 tf = time.time_ns()
 print("time (s) ", (tf - t0) / 1.0e9)

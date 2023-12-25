@@ -117,10 +117,7 @@ class History:
         elif hasattr(values, "to_dict"):
             values = values.to_dict()
 
-        elif isinstance(values, dict) or hasattr(values, "items"):
-            pass
-
-        else:
+        elif not isinstance(values, dict) and not hasattr(values, "items"):
             values = {"value": [values]}
             main_value_name = "value"
             single_value = True
@@ -142,9 +139,7 @@ class History:
 
                 raise_if_len_not_match(len(val), n_elements, key)
 
-            elif isinstance(val, list):
-                pass
-            else:
+            elif not isinstance(val, list):
                 val = [val]
 
             value_dict[key] = val
@@ -183,10 +178,7 @@ class History:
         """
         get a slice of iterations from this history object
         """
-        values_sliced = {}
-        for key in self.keys():
-            values_sliced[key] = self[key][slce]
-
+        values_sliced = {key: self[key][slce] for key in self.keys()}
         iters = self.iters[slce]
 
         hist = History(values_sliced, iters)
@@ -275,7 +267,7 @@ def append(self: History, val: Any):
 
 @dispatch
 def append(self: History, val: History, it: Any):  # noqa: E0102, F811
-    if not set(self.keys()) == set(val.keys()):
+    if set(self.keys()) != set(val.keys()):
         raise ValueError("cannot concatenate MVHistories with different keys")
 
     if it is not None:
@@ -389,9 +381,8 @@ def accum_in_tree(fun, tree_accum, tree, compound=True, **kwargs):
 def accum_histories(accum, data, *, step=0):
     if accum is None:
         return History(data, step)
-    else:
-        accum.append(data, it=step)
-        return accum
+    accum.append(data, it=step)
+    return accum
 
 
 accum_histories_in_tree = partial(accum_in_tree, accum_histories)

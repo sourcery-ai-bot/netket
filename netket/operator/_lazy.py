@@ -59,27 +59,24 @@ class WrappedOperator(AbstractOperator):
     def __matmul__(self, other):
         # this is a base implementation of matmul
         if isinstance(other, AbstractOperator):
-            if self == other and self.is_hermitian:
-                from ._lazy import Squared
-
-                return Squared(self)
-            else:
+            if self != other or not self.is_hermitian:
                 return self._op__matmul__(other)
-        if isinstance(other, np.ndarray) or isinstance(other, jnp.ndarray):
+            from ._lazy import Squared
+
+            return Squared(self)
+        if isinstance(other, (np.ndarray, jnp.ndarray)):
             return self._op__matmul__(other)
         else:
             return NotImplemented
 
     def __rmatmul__(self, other):
-        if isinstance(other, AbstractOperator):
-            if self == other and self.is_hermitian:
-                from ._lazy import Squared
-
-                return Squared(self)
-            else:
-                return self._op__rmatmul__(other)
-        else:
+        if not isinstance(other, AbstractOperator):
             return NotImplemented
+        if self != other or not self.is_hermitian:
+            return self._op__rmatmul__(other)
+        from ._lazy import Squared
+
+        return Squared(self)
 
     def _op__matmul__(self, other):
         return self.collect() @ other
@@ -165,10 +162,7 @@ class Adjoint(WrappedOperator):
         return f"Adjoint({self.parent})"
 
     def __mul__(self, other):
-        if self.parent == other:
-            return Squared(other)
-
-        return self.collect() * other
+        return Squared(other) if self.parent == other else self.collect() * other
 
     def __rmul__(self, other):
         if self.parent == other:
@@ -177,10 +171,7 @@ class Adjoint(WrappedOperator):
         return other * self.collect()
 
     def _op__matmul__(self, other):
-        if self.parent == other:
-            return Squared(other)
-
-        return self.collect() @ other
+        return Squared(other) if self.parent == other else self.collect() @ other
 
     # def __op_rmatmul__(self, other):
     #    if self.parent == other:

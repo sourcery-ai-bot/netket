@@ -61,7 +61,7 @@ def variables_from_file(filename: str, variables: _PyTree):
     """
     if not _path.isfile(filename):
         if filename[-6:] != ".mpack":
-            filename = filename + ".mpack"
+            filename += ".mpack"
 
     with open(filename, "rb") as f:
         return _serialization.from_bytes(variables, f.read())
@@ -81,9 +81,9 @@ def variables_from_tar(filename: str, variables: _PyTree, i: int):
     """
     if not _path.isfile(filename):
         if filename[-4:] != ".tar":
-            filename = filename + ".tar"
+            filename += ".tar"
 
     with _tarfile.TarFile(filename, "r") as file:
-        info = file.getmember(str(i) + ".mpack")
+        info = file.getmember(f"{i}.mpack")
         with file.extractfile(info) as f:
             return _serialization.from_bytes(variables, f.read())

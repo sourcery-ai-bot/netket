@@ -299,10 +299,10 @@ class FullSumState(VariationalState):
                 chunk_size=self.chunk_size,
             )
 
-        if normalize:
-            arr = self._array
-        else:
-            arr = nknn.to_array(
+        return (
+            self._array
+            if normalize
+            else nknn.to_array(
                 self.hilbert,
                 self._apply_fun,
                 self.variables,
@@ -310,8 +310,7 @@ class FullSumState(VariationalState):
                 allgather=allgather,
                 chunk_size=self.chunk_size,
             )
-
-        return arr
+        )
 
     def probability_distribution(self):
         if self._pdf is None:
@@ -334,17 +333,16 @@ class FullSumState(VariationalState):
         )
 
     def __str__(self):
-        return "FullSumState(" + f"hilbert = {self.hilbert}, "
+        return f"FullSumState(hilbert = {self.hilbert}, "
 
 
 # serialization
 
 
 def serialize_FullSumState(vstate):
-    state_dict = {
+    return {
         "variables": serialization.to_state_dict(vstate.variables),
     }
-    return state_dict
 
 
 def deserialize_FullSumState(vstate, state_dict):

@@ -94,10 +94,7 @@ class FiniteGroup(FiniteSemiGroup):
             return_inverse=return_inverse,
         )
         group = FiniteGroup([self.elems[i] for i in sorted(result[1])])
-        if return_inverse:
-            return group, result[2]
-        else:
-            return group
+        return (group, result[2]) if return_inverse else group
 
     @struct.property_cached
     def inverse(self) -> Array:
@@ -252,10 +249,7 @@ class FiniteGroup(FiniteSemiGroup):
         _, indices = np.unique(sorting_table, axis=0, return_index=True)
         table = table[indices]
 
-        # Get rid of annoying nearly-zero entries
-        table = prune_zeros(table)
-
-        return table
+        return prune_zeros(table)
 
     def character_table(self) -> Array:
         r"""
@@ -385,12 +379,11 @@ def _cplx_sign(x):
 
 
 def random(n, seed, cplx=False):
-    if cplx:
-        v = np.random.default_rng(seed).normal(size=(2, n))
-        v = v[0] + 1j * v[1]
-        return v
-    else:
+    if not cplx:
         return np.random.default_rng(seed).normal(size=n)
+    v = np.random.default_rng(seed).normal(size=(2, n))
+    v = v[0] + 1j * v[1]
+    return v
 
 
 @dispatch

@@ -67,9 +67,6 @@ class Renyi2EntanglementEntropy(AbstractObservable):
             Rényi2 operator for which computing the expected value.
         """
 
-        # Homogeneos, not discrete... because we don't support
-        # tensorhilbert and such. We could generalize easily by
-        # setting psi(x not in hilbert) = 0
         if not isinstance(hilbert, HomogeneousHilbert):
             raise TypeError(
                 dedent(
@@ -82,19 +79,18 @@ class Renyi2EntanglementEntropy(AbstractObservable):
                     """
                 )
             )
-        else:
-            if hilbert.constrained:
-                raise ValueError(
-                    dedent(
-                        """
+        if hilbert.constrained:
+            raise ValueError(
+                dedent(
+                    """
                         Entanglement entropy estimation is not implemented
                         for constrained Hilbert spaces.
 
                         It can be generalised, so get in touch with us if you
                         need this feature.
                         """
-                    )
                 )
+            )
 
         super().__init__(hilbert)
 

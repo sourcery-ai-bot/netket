@@ -498,15 +498,12 @@ class FermionOperator2nd(DiscreteOperator):
 
             sections[b] = n_c
 
-        if pad:
-            return x_prime, mels
-        else:
-            return x_prime[:n_c], mels[:n_c]
+        return (x_prime, mels) if pad else (x_prime[:n_c], mels[:n_c])
 
     def _op__imatmul__(self, other):
         if not isinstance(other, FermionOperator2nd):
             return NotImplemented
-        if not self.hilbert == other.hilbert:
+        if self.hilbert != other.hilbert:
             raise ValueError(
                 "Can only multiply identical hilbert spaces (got A@B, "
                 f"A={self.hilbert}, B={other.hilbert})"
@@ -563,7 +560,7 @@ class FermionOperator2nd(DiscreteOperator):
                 f"In-place addition not implemented for {type(self)} "
                 f"and {type(other)}"
             )
-        if not self.hilbert == other.hilbert:
+        if self.hilbert != other.hilbert:
             raise ValueError(
                 f"Can only add identical hilbert spaces (got A+B, A={self.hilbert}, "
                 f"B={other.hilbert})"
@@ -703,7 +700,7 @@ def _pack_internals(operators: OperatorDict, dtype: DType):
         if len(term) == 0:
             constants.append(weight)
             continue
-        if not all(len(t) == 2 for t in term):
+        if any(len(t) != 2 for t in term):
             raise ValueError(f"terms must contain (i, dag) pairs, but received {term}")
 
         # fill some info about the term
@@ -765,18 +762,11 @@ def _flip(site):  # pragma: no cover
 def _apply_operator(xt, orb_idx, dagger, mel):  # pragma: no cover
     has_xp = True
     empty_site = _is_empty(xt[orb_idx])
-    if dagger:
-        if not empty_site:
-            has_xp = False
-        else:
-            mel *= (-1) ** np.sum(xt[:orb_idx])  # jordan wigner sign
-            xt[orb_idx] = _flip(xt[orb_idx])
+    if dagger and not empty_site or not dagger and empty_site:
+        has_xp = False
     else:
-        if empty_site:
-            has_xp = False
-        else:
-            mel *= (-1) ** np.sum(xt[:orb_idx])  # jordan wigner sign
-            xt[orb_idx] = _flip(xt[orb_idx])
+        mel *= (-1) ** np.sum(xt[:orb_idx])  # jordan wigner sign
+        xt[orb_idx] = _flip(xt[orb_idx])
     if _isclose(mel, 0):
         has_xp = False
     return xt, mel, has_xp

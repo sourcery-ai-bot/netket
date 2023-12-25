@@ -100,15 +100,14 @@ class ARDirectSampler(Sampler):
         """
         return True
 
-    def _init_cache(sampler, model, σ, key):
+    def _init_cache(self, model, σ, key):
         variables = model.init(key, σ, 0, method=model.conditional)
-        cache = variables.get("cache")
-        return cache
+        return variables.get("cache")
 
-    def _init_state(sampler, model, variables, key):
+    def _init_state(self, model, variables, key):
         return ARDirectSamplerState(key=key)
 
-    def _reset(sampler, model, variables, state):
+    def _reset(self, model, variables, state):
         return state
 
     @partial(jax.jit, static_argnums=(1, 4))

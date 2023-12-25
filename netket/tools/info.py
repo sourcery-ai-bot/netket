@@ -25,10 +25,10 @@ STD_SPACE = 20
 
 
 def printfmt(key, value=None, *, indent=0, pre="", alignment=STD_SPACE):
-    INDENT_STR = "- "
-
     if indent > 0:
         indent_spaces = indent * 2
+        INDENT_STR = "- "
+
         alignment -= indent_spaces + len(INDENT_STR)
 
         pre = f"{pre}{'' : <{indent_spaces}}{INDENT_STR}"

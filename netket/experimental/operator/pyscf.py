@@ -368,7 +368,7 @@ def from_pyscf_molecule(
 
     E_nuc, Tij, Vijkl = TV_from_pyscf_molecule(molecule, mo_coeff, cutoff=cutoff)
 
-    ha = operator_from_arrays(
+    return operator_from_arrays(
         E_nuc,
         Tij,
         0.5 * Vijkl,
@@ -376,5 +376,3 @@ def from_pyscf_molecule(
         term_conj4=(1, 1, 0, 0),
         cls=implementation,
     )
-    # TODO maybe run setup and set _max_conn_size here estimating it analytially
-    return ha

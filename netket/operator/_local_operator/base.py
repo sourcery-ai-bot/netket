@@ -51,10 +51,7 @@ def is_hermitian(a: np.ndarray, rtol=1e-05, atol=1e-08) -> bool:
 
 
 def _is_sorted(a):
-    for i in range(len(a) - 1):
-        if a[i + 1] < a[i]:
-            return False
-    return True
+    return all(a[i + 1] >= a[i] for i in range(len(a) - 1))
 
 
 class LocalOperator(DiscreteOperator):
@@ -102,7 +99,7 @@ class LocalOperator(DiscreteOperator):
         self._is_hermitian = None
 
         if not all(
-            [_is_sorted(hilbert.states_at_index(i)) for i in range(hilbert.size)]
+            _is_sorted(hilbert.states_at_index(i)) for i in range(hilbert.size)
         ):
             raise ValueError(
                 dedent(
@@ -234,13 +231,12 @@ class LocalOperator(DiscreteOperator):
 
     def transpose(self, *, concrete=False):
         r"""LocalOperator: Returns the transpose of this operator."""
-        if concrete:
-            new = self.copy()
-            for aon in new._operators_dict.keys():
-                new._operators_dict[aon] = new._operators_dict[aon].transpose()
-            return new
-        else:
+        if not concrete:
             return Transpose(self)
+        new = self.copy()
+        for aon in new._operators_dict.keys():
+            new._operators_dict[aon] = new._operators_dict[aon].transpose()
+        return new
 
     def conjugate(self, *, concrete=False):
         r"""LocalOperator: Returns the complex conjugate of this operator."""

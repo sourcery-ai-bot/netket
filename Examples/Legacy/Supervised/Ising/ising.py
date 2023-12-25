@@ -45,7 +45,7 @@ n_iter = 1000
 overlaps = []
 
 # Run with "Overlap_phi" loss. Also available currently is "MSE", "Overlap_uni"
-for i in range(n_iter):
+for _ in range(n_iter):
     spvsd.advance(loss_function="Overlap_phi")
     overlaps.append(np.exp(-spvsd.loss_log_overlap))
 
@@ -55,5 +55,5 @@ if nk.MPI.rank() == 0:
     plt.ylabel("Overlap")
     plt.xlabel("Iteration #")
     plt.axhline(y=1, xmin=0, xmax=n_iter, linewidth=2, color="k", label="1")
-    plt.title(r"Transverse-field Ising model, $L=" + str(L) + "$")
+    plt.title(f"Transverse-field Ising model, $L={L}$")
     plt.show()

@@ -39,10 +39,7 @@ def _standardize_matrix_input_type(op):
 
     Eventually, we could also support spmatrices (but some work will be needed.)
     """
-    if isinstance(op, list):
-        return np.asarray(op)
-    else:
-        return op
+    return np.asarray(op) if isinstance(op, list) else op
 
 
 def cast_operator_matrix_dtype(matrix: Array, dtype: DType):
@@ -265,17 +262,16 @@ class PauliStringsBase(DiscreteOperator):
         return self._is_hermitian
 
     def __repr__(self):
-        print_list = []
-        for op, w in zip(self.operators, self.weights):
-            print_list.append(f"    {op} : {str(w)}")
-        s = "{}(hilbert={}, n_strings={}, dtype={}, dict(operators:weights)=\n{}\n)".format(
+        print_list = [
+            f"    {op} : {str(w)}" for op, w in zip(self.operators, self.weights)
+        ]
+        return "{}(hilbert={}, n_strings={}, dtype={}, dict(operators:weights)=\n{}\n)".format(
             type(self).__name__,
             self.hilbert,
             len(self.operators),
             self.dtype,
             ",\n".join(print_list),
         )
-        return s
 
     def copy(self, *, dtype: Optional[DType] = None, cutoff=None):
         """Returns a copy of the operator, while optionally changing the dtype
@@ -320,7 +316,7 @@ class PauliStringsBase(DiscreteOperator):
     def _op_imatmul_(self, other: "PauliStringsBase") -> "PauliStringsBase":
         if not isinstance(other, PauliStringsBase):
             return NotImplemented
-        if not self.hilbert == other.hilbert:
+        if self.hilbert != other.hilbert:
             raise ValueError(
                 f"Can only multiply identical hilbert spaces (got A@B, A={self.hilbert}, B={other.hilbert})"
             )
@@ -404,7 +400,7 @@ class PauliStringsBase(DiscreteOperator):
 
     def __iadd__(self, other):
         if isinstance(other, PauliStringsBase):
-            if not self.hilbert == other.hilbert:
+            if self.hilbert != other.hilbert:
                 raise ValueError(
                     f"Can only add identical hilbert spaces (got A+B, A={self.hilbert}, B={other.hilbert})"
                 )
@@ -446,7 +442,7 @@ def _count_of_locations(of_qubit_operator):
     # we always start counting from 0, so we only determine the maximum location
     def max_or_default(x):
         x = list(x)
-        return max(x) if len(x) > 0 else -1  # -1 is default
+        return max(x) if x else -1
 
     n_qubits = 1 + max_or_default(
         max_or_default(term[0] for term in op) for op in of_qubit_operator.terms.keys()
@@ -497,7 +493,7 @@ def _apply_pauli_op_reduction(op1, op2):
 
 @jit(nopython=True)
 def _split_string(s):
-    return [x for x in str(s)]
+    return list(str(s))
 
 
 @jit(nopython=True)

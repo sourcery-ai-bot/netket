@@ -164,13 +164,12 @@ class TDVPSchmitt(TDVPBaseDriver):
                 raise ValueError(
                     "only real-time Lindblad evolution is supported for " "mixed states"
                 )
+        elif propagation_type == "real":
+            self._loss_grad_factor = -1.0j
+        elif propagation_type == "imag":
+            self._loss_grad_factor = -1.0
         else:
-            if propagation_type == "real":
-                self._loss_grad_factor = -1.0j
-            elif propagation_type == "imag":
-                self._loss_grad_factor = -1.0
-            else:
-                raise ValueError("propagation_type must be one of 'real', 'imag'")
+            raise ValueError("propagation_type must be one of 'real', 'imag'")
 
         self.rcond = rcond
         self.rcond_smooth = rcond_smooth
@@ -193,7 +192,7 @@ class TDVPSchmitt(TDVPBaseDriver):
                 ("state         ", self.state),
             ]
         ]
-        return "\n{}".format(" " * 3 * (depth + 1)).join([str(self), *lines])
+        return f'\n{" " * 3 * (depth + 1)}'.join([str(self), *lines])
 
 
 # Copyright notice:

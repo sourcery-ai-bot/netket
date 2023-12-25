@@ -33,8 +33,8 @@ class ResolvableType(type):
         type.__init__(self, name, (), {})
         self._type = None
 
-    def __new__(self, name):
-        return type.__new__(self, name, (), {})
+    def __new__(cls, name):
+        return type.__new__(cls, name, (), {})
 
     def deliver(self, type):
         """Deliver the type.
@@ -56,10 +56,7 @@ class ResolvableType(type):
                 `type` has been delivered via :meth:`.ResolvableType.deliver`, this will
                 return that type.
         """
-        if self._type is None:
-            return self
-        else:
-            return self._type
+        return self if self._type is None else self._type
 
 
 class PromisedType(ResolvableType):
@@ -174,29 +171,28 @@ def resolve_type_hint(x):
             # `None`. Since the hint wasn't subscripted, the right thing is to right the
             # hint itself.
             return x
+        if origin is UnionType:  # pragma: specific no cover 3.8 3.9
+            # The new union syntax was used.
+            y = args[0]
+            for arg in args[1:]:
+                y = y | arg
+            return y
         else:
-            if origin is UnionType:  # pragma: specific no cover 3.8 3.9
-                # The new union syntax was used.
-                y = args[0]
-                for arg in args[1:]:
-                    y = y | arg
-                return y
-            else:
-                # Do not resolve the arguments for `Literal`s.
-                if origin != Literal:
-                    args = resolve_type_hint(args)
-                try:
-                    return origin[args]
-                except TypeError as e:  # pragma: specific no cover 3.9 3.10 3.11
-                    # In Python 3.8, the origin might be a type that cannot be
-                    # subscripted. As a workaround, we get the name of the type,
-                    # capitalize it, and try to get it from `typing`. So far, this
-                    # seems to have worked fine.
-                    if sys.version_info.minor <= 8:
-                        return getattr(typing, origin.__name__.capitalize())[args]
-                    else:  # pragma: no cover
-                        # This branch can never be reached.
-                        raise e
+            # Do not resolve the arguments for `Literal`s.
+            if origin != Literal:
+                args = resolve_type_hint(args)
+            try:
+                return origin[args]
+            except TypeError as e:  # pragma: specific no cover 3.9 3.10 3.11
+                # In Python 3.8, the origin might be a type that cannot be
+                # subscripted. As a workaround, we get the name of the type,
+                # capitalize it, and try to get it from `typing`. So far, this
+                # seems to have worked fine.
+                if sys.version_info.minor <= 8:
+                    return getattr(typing, origin.__name__.capitalize())[args]
+                else:  # pragma: no cover
+                    # This branch can never be reached.
+                    raise e
 
     elif x is None:
         return x
@@ -206,19 +202,18 @@ def resolve_type_hint(x):
     elif isinstance(x, tuple):
         return tuple(resolve_type_hint(arg) for arg in x)
     elif isinstance(x, list):
-        return list(resolve_type_hint(arg) for arg in x)
+        return [resolve_type_hint(arg) for arg in x]
     elif isinstance(x, type):
-        if isinstance(x, ResolvableType):
-            if isinstance(x, ModuleType):
-                if not x.retrieve():
-                    # If the type could not be retrieved, then just return the
-                    # wrapper. Namely, `x.resolve()` will then return `x`, which means
-                    # that the below call will result in an infinite recursion.
-                    return x
-            return resolve_type_hint(x.resolve())
-        else:
+        if not isinstance(x, ResolvableType):
             return x
 
+        if isinstance(x, ModuleType):
+            if not x.retrieve():
+                # If the type could not be retrieved, then just return the
+                # wrapper. Namely, `x.resolve()` will then return `x`, which means
+                # that the below call will result in an infinite recursion.
+                return x
+        return resolve_type_hint(x.resolve())
     else:
         warnings.warn(
             f"Could not resolve the type hint of `{x}`. "
@@ -262,11 +257,10 @@ def _is_faithful(x):
             # `Tuple`, `Dict`, `Callable`, and `Generator` are. When we come across a
             # counter-example, we will refine this logic.
             return True
+        if origin in {typing.Union, typing.Optional}:
+            return all(is_faithful(arg) for arg in args)
         else:
-            if origin in {typing.Union, typing.Optional}:
-                return all(is_faithful(arg) for arg in args)
-            else:
-                return False
+            return False
 
     elif x is None:
         return True

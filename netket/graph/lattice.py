@@ -283,20 +283,7 @@ class Lattice(Graph):
         }
 
         # Generate edges
-        if custom_edges is not None:
-            if max_neighbor_order is not None:
-                raise ValueError(
-                    "custom_edges and max_neighbor_order cannot be specified at the same time"
-                )
-            colored_edges = get_custom_edges(
-                self._basis_vectors,
-                self._extent,
-                self._site_offsets,
-                self._pbc,
-                distance_atol,
-                custom_edges,
-            )
-        else:
+        if custom_edges is None:
             if max_neighbor_order is None:
                 max_neighbor_order = 1
             colored_edges = get_nn_edges(
@@ -308,6 +295,19 @@ class Lattice(Graph):
                 max_neighbor_order,
             )
 
+        elif max_neighbor_order is not None:
+            raise ValueError(
+                "custom_edges and max_neighbor_order cannot be specified at the same time"
+            )
+        else:
+            colored_edges = get_custom_edges(
+                self._basis_vectors,
+                self._extent,
+                self._site_offsets,
+                self._pbc,
+                distance_atol,
+                custom_edges,
+            )
         super().__init__(colored_edges, len(self._sites))
 
     @staticmethod
@@ -463,8 +463,7 @@ class Lattice(Graph):
         to a site.
         """
         int_pos = self._to_integer_position(position)
-        ids = self._get_id_from_dict(self._int_position_to_site, int_pos)
-        return ids
+        return self._get_id_from_dict(self._int_position_to_site, int_pos)
 
     def id_from_basis_coords(self, basis_coords: CoordT) -> Union[int, Array]:
         """

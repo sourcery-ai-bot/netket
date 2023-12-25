@@ -72,12 +72,11 @@ def product(p: Translation, q: Translation):
 
 def _ensure_iterable(x):
     """Extracts iterables given in varargs"""
-    if isinstance(x[0], Iterable):
-        if len(x) > 1:
-            raise TypeError("Either Iterable or variable argument list expected")
-        return x[0]
-    else:
+    if not isinstance(x[0], Iterable):
         return x
+    if len(x) > 1:
+        raise TypeError("Either Iterable or variable argument list expected")
+    return x[0]
 
 
 @struct.dataclass
@@ -140,22 +139,22 @@ class SpaceGroupBuilder:
         The group of valid translations along an axis as a `PermutationGroup`
         acting on the sites of `self.lattice.`
         """
-        if self.lattice._pbc[axis]:
-            trans_list = [Identity()]
-            # note that we need the preimages in the permutation
-            trans_perm = self.lattice.id_from_position(
-                self.lattice.positions - self.lattice.basis_vectors[axis]
-            )
-            vector = np.zeros(self.lattice.ndim, dtype=int)
-            vector[axis] = 1
-            trans_by_one = Translation(trans_perm, vector)
-
-            for _ in range(1, self.lattice.extent[axis]):
-                trans_list.append(trans_list[-1] @ trans_by_one)
-
-            return PermutationGroup(trans_list, degree=self.lattice.n_nodes)
-        else:
+        if not self.lattice._pbc[axis]:
             return PermutationGroup([Identity()], degree=self.lattice.n_nodes)
+        trans_list = [Identity()]
+        # note that we need the preimages in the permutation
+        trans_perm = self.lattice.id_from_position(
+            self.lattice.positions - self.lattice.basis_vectors[axis]
+        )
+        vector = np.zeros(self.lattice.ndim, dtype=int)
+        vector[axis] = 1
+        trans_by_one = Translation(trans_perm, vector)
+
+        trans_list.extend(
+            trans_list[-1] @ trans_by_one
+            for _ in range(1, self.lattice.extent[axis])
+        )
+        return PermutationGroup(trans_list, degree=self.lattice.n_nodes)
 
     @struct.property_cached
     def _full_translation_group(self) -> PermutationGroup:

@@ -60,10 +60,7 @@ class Qubit(HomogeneousHilbert):
 
         Nsites = len(sites)
 
-        if self.size - Nsites == 0:
-            return None
-        else:
-            return Qubit(N=self.size - Nsites)
+        return None if self.size - Nsites == 0 else Qubit(N=self.size - Nsites)
 
     def __repr__(self):
         return f"Qubit(N={self.size})"

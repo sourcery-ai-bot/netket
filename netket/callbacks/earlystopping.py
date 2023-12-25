@@ -76,10 +76,7 @@ class EarlyStopping:
                 # If using baseline, update patience only if we are better than baseline
                 self._best_patience_counter = 0
 
-        if self._best_patience_counter > self.patience:
-            return False
-
-        return True
+        return self._best_patience_counter <= self.patience
 
     def _is_improvement(self, loss, target):
         # minimal value for absolute and relative improvement

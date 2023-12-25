@@ -47,7 +47,7 @@ vals = np.zeros((n_samples, batch_size), dtype=np.complex128)
 
 
 def bench(n_times, sampler):
-    for k in range(n_times):
+    for _ in range(n_times):
         for i, sample in enumerate(sampler.samples(n_samples)):
             samples[i] = sample
 

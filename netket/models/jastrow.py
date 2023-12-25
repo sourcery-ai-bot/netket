@@ -45,6 +45,4 @@ class Jastrow(nn.Module):
         W = jnp.zeros((nv, nv), dtype=self.param_dtype).at[il].set(kernel)
 
         W, x_in = promote_dtype(W, x_in, dtype=None)
-        y = jnp.einsum("...i,ij,...j", x_in, W, x_in)
-
-        return y
+        return jnp.einsum("...i,ij,...j", x_in, W, x_in)

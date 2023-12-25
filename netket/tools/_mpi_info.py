@@ -2,8 +2,7 @@ from ._common import exec_in_terminal, get_executable_path
 
 
 def get_global_mpi_info():
-    info = {}
-    info["mpicc"] = get_executable_path("mpicc")
+    info = {"mpicc": get_executable_path("mpicc")}
     info["mpirun"] = get_executable_path("mpirun")
     info["mpiexec"] = get_executable_path("mpiexec")
 
@@ -16,9 +15,4 @@ def get_global_mpi_info():
 
 def get_link_flags(flags):
     flags = flags.replace(",", " ").split()
-    res = []
-    for flag in flags:
-        if flag.startswith("-L"):
-            res.append(flag)
-
-    return res
+    return [flag for flag in flags if flag.startswith("-L")]

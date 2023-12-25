@@ -29,29 +29,25 @@ from ._autocorr import integrated_time
 
 
 def _format_decimal(value, std, var):
-    if math.isfinite(std) and std > 1e-7:
-        decimals = max(int(np.ceil(-np.log10(std))), 0)
-        return (
-            "{0:.{1}f}".format(value, decimals + 1),
-            "{0:.{1}f}".format(std, decimals + 1),
-            "{0:.{1}f}".format(var, decimals + 1),
-        )
-    else:
+    if not math.isfinite(std) or std <= 1e-7:
         return (
             f"{value:.3e}",
             f"{std:.3e}",
             f"{var:.3e}",
         )
+    decimals = max(int(np.ceil(-np.log10(std))), 0)
+    return (
+        "{0:.{1}f}".format(value, decimals + 1),
+        "{0:.{1}f}".format(std, decimals + 1),
+        "{0:.{1}f}".format(var, decimals + 1),
+    )
 
 
 _NaN = float("NaN")
 
 
 def _maybe_item(x):
-    if hasattr(x, "shape") and x.shape == ():
-        return x.item()
-    else:
-        return x
+    return x.item() if hasattr(x, "shape") and x.shape == () else x
 
 
 @struct.dataclass
@@ -95,8 +91,7 @@ class Stats:
     """
 
     def to_dict(self):
-        jsd = {}
-        jsd["Mean"] = _maybe_item(self.mean)
+        jsd = {"Mean": _maybe_item(self.mean)}
         jsd["Variance"] = _maybe_item(self.variance)
         jsd["Sigma"] = _maybe_item(self.error_of_mean)
         jsd["R_hat"] = _maybe_item(self.R_hat)
@@ -112,10 +107,7 @@ class Stats:
         # extract adressable data from fully replicated arrays
         self = extract_replicated(self)
         mean, err, var = _format_decimal(self.mean, self.error_of_mean, self.variance)
-        if not math.isnan(self.R_hat):
-            ext = f", R̂={self.R_hat:.4f}"
-        else:
-            ext = ""
+        ext = f", R̂={self.R_hat:.4f}" if not math.isnan(self.R_hat) else ""
         if config.netket_experimental_fft_autocorrelation:
             if not (math.isnan(self.tau_corr) and math.isnan(self.tau_corr_max)):
                 ext += f", τ={self.tau_corr:.1f}<{self.tau_corr_max:.1f}"
@@ -156,10 +148,7 @@ def _get_blocks(data, block_size):
 def _block_variance(data, l):
     blocks = _get_blocks(data, l)
     ts = _total_size(blocks)
-    if ts > 0:
-        return _var(blocks), ts
-    else:
-        return jnp.nan, 0
+    return (_var(blocks), ts) if ts > 0 else (jnp.nan, 0)
 
 
 def _batch_variance(data):
@@ -233,10 +222,9 @@ def statistics(data):
     """
     if config.netket_experimental_fft_autocorrelation:
         return _statistics(data)
-    else:
-        from .mc_stats_old import statistics as statistics_blocks
+    from .mc_stats_old import statistics as statistics_blocks
 
-        return statistics_blocks(data)
+    return statistics_blocks(data)
 
 
 @jax.jit
@@ -265,6 +253,4 @@ def _statistics(data):
         error_of_mean = jnp.sqrt(block_var / n_blocks)
         R_hat = jnp.nan
 
-    res = Stats(mean, error_of_mean, variance, tau_avg, R_hat, tau_max)
-
-    return res
+    return Stats(mean, error_of_mean, variance, tau_avg, R_hat, tau_max)

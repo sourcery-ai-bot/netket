@@ -106,11 +106,11 @@ class Signature(Comparable):
         if self.varargs != Signature._default_varargs:
             if show_comma:
                 yield Segment(", ")
-            yield Segment("varargs=" + repr_short(self.varargs))
+            yield Segment(f"varargs={repr_short(self.varargs)}")
         if self.precedence != Signature._default_precedence:
             if show_comma:
                 yield Segment(", ")
-            yield Segment("precedence=" + repr(self.precedence))
+            yield Segment(f"precedence={repr(self.precedence)}")
         yield Segment(")")
 
     def __eq__(self, other):
@@ -171,20 +171,17 @@ class Signature(Comparable):
                 _self = Signature(*self.expand_varargs(max_len))
                 _other = Signature(*other.expand_varargs(max_len))
 
-            # If an element in set [[self]] is more specific than the smallest
-            # element in set [[other]]
-            if _self <= _other:
-                # Check that no element of set [[other]] is more specific than
-                # an element of set [[self]]
-                varargs_comparison = beartype.door.TypeHint(
-                    other.varargs
-                ) < beartype.door.TypeHint(self.varargs)
-                return not varargs_comparison
-            else:
+            if _self > _other:
                 # if no element in set [[self]] is more specific than set [[other]],
                 # then self is not more specific than other
                 return False
 
+            # Check that no element of set [[other]] is more specific than
+            # an element of set [[self]]
+            varargs_comparison = beartype.door.TypeHint(
+                other.varargs
+            ) < beartype.door.TypeHint(self.varargs)
+            return not varargs_comparison
         # If the number of types of the signatures are unequal, then the signature
         # with the fewer number of types must be expanded using variable arguments.
         if not (
@@ -198,10 +195,8 @@ class Signature(Comparable):
         self_types = self.expand_varargs(len(other.types))
         other_types = other.expand_varargs(len(self.types))
         is_more_specific = all(
-            [
-                beartype.door.TypeHint(x) <= beartype.door.TypeHint(y)
-                for x, y in zip(self_types, other_types)
-            ]
+            beartype.door.TypeHint(x) <= beartype.door.TypeHint(y)
+            for x, y in zip(self_types, other_types)
         )
 
         # If there are no varargs, we could just return `is_more_specific`, but if
@@ -215,16 +210,10 @@ class Signature(Comparable):
                 # If only one signature has a vararg, check if the two signatures
                 # are really equivalent
                 equivalent = all(
-                    [
-                        beartype.door.TypeHint(x) == beartype.door.TypeHint(y)
-                        for x, y in zip(self_types, other_types)
-                    ]
+                    beartype.door.TypeHint(x) == beartype.door.TypeHint(y)
+                    for x, y in zip(self_types, other_types)
                 )
-                if equivalent and self.has_varargs:
-                    # Rule #4: the smallest is the one without varargs
-                    return False
-                else:
-                    return True
+                return not equivalent or not self.has_varargs
             else:
                 # None has varargs (both vararg case was already handled above) so
                 # just return True
@@ -242,16 +231,12 @@ class Signature(Comparable):
         Returns:
             bool: `True` if `values` match this signature and `False` otherwise.
         """
-        # `values` must either be exactly many as `self.types`. If there are more
-        # `values`, then there must be variable arguments to cover the arguments.
-        if not (
-            len(self.types) == len(values)
-            or (len(self.types) < len(values) and self.has_varargs)
+        if len(self.types) != len(values) and (
+            len(self.types) >= len(values) or not self.has_varargs
         ):
             return False
-        else:
-            types = self.expand_varargs(len(values))
-            return all(_is_bearable(v, t) for v, t in zip(values, types))
+        types = self.expand_varargs(len(values))
+        return all(_is_bearable(v, t) for v, t in zip(values, types))
 
     def compute_distance(self, values: Tuple[object, ...]) -> int:
         """Computes the edit distance between this
@@ -275,16 +260,9 @@ class Signature(Comparable):
     def compute_args_ok(self, values) -> List[bool]:
         types = self.expand_varargs(len(values))
 
-        args_ok = []
-
-        # count 1 for every mismatching arg type
-        for v, t in zip(values, types):
-            args_ok.append(_is_bearable(v, t))
-
+        args_ok = [_is_bearable(v, t) for v, t in zip(values, types)]
         # all extra args are not ok
-        for _ in range(len(args_ok), len(values)):
-            args_ok.append(False)
-
+        args_ok.extend(False for _ in range(len(args_ok), len(values)))
         return args_ok
 
 
@@ -298,9 +276,7 @@ def inspect_signature(f) -> inspect.Signature:
     Returns:
         object: Signature.
     """
-    if isinstance(f, operator.itemgetter):
-        f = wrap_lambda(f)
-    elif isinstance(f, operator.attrgetter):
+    if isinstance(f, (operator.itemgetter, operator.attrgetter)):
         f = wrap_lambda(f)
     return inspect.signature(f)
 

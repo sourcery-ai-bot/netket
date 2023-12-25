@@ -46,8 +46,7 @@ def generate(N, n_basis=20, n_shots=1000, seed=1234):
             hi.n_states, p=np.square(np.absolute(psir)), size=n_shots
         )
 
-        for rn in rand_n:
-            training_samples.append(hi.numbers_to_states(rn))
+        training_samples.extend(hi.numbers_to_states(rn) for rn in rand_n)
         training_bases += [m] * n_shots
 
         rotations.append(rotation)

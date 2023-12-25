@@ -50,29 +50,27 @@ class AbstractSuperOperator(DiscreteOperator):
     def __matmul__(self, other):
         # Override DiscreteOperator to implement the Squared trick.
         # Should eventually remove it as well.
-        if isinstance(other, np.ndarray) or isinstance(other, jnp.ndarray):
+        if isinstance(other, (np.ndarray, jnp.ndarray)):
             return self.apply(other)
         elif isinstance(other, AbstractSuperOperator):
-            if self == other and self.is_hermitian:
-                from ._lazy import Squared
-
-                return Squared(self)
-            else:
+            if self != other or not self.is_hermitian:
                 return self._op__matmul__(other)
+            from ._lazy import Squared
+
+            return Squared(self)
         else:
             return NotImplemented
 
     def __rmatmul__(self, other):
         # override DiscreteOperator to implement the Squared trick.
         # Should eventually remove it as well.
-        if isinstance(other, np.ndarray) or isinstance(other, jnp.ndarray):
+        if isinstance(other, (np.ndarray, jnp.ndarray)):
             return NotImplemented
         elif isinstance(other, AbstractSuperOperator):
-            if self == other and self.is_hermitian:
-                from ._lazy import Squared
-
-                return Squared(self)
-            else:
+            if self != other or not self.is_hermitian:
                 return self._op__rmatmul__(other)
+            from ._lazy import Squared
+
+            return Squared(self)
         else:
             return NotImplemented

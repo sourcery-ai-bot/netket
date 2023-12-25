@@ -113,29 +113,24 @@ def ensure_prev_neighbors(
     if reorder_idx is None:
         if inv_reorder_idx is not None:
             reorder_idx = _get_inv_idx(inv_reorder_idx)
-    else:
-        if inv_reorder_idx is None:
-            inv_reorder_idx = _get_inv_idx(reorder_idx)
+    elif inv_reorder_idx is None:
+        inv_reorder_idx = _get_inv_idx(reorder_idx)
     # Now reorder_idx and inv_reorder_idx must be both None or not None
 
     if reorder_idx is None:
-        if prev_neighbors is None:
-            # There is a faster code path for 1D RNN
-            pass
-        else:
+        if prev_neighbors is not None:
             raise ValueError(
                 "When `prev_neighbors` is provided, you must also provide "
                 "either `reorder_idx` or `inv_reorder_idx`."
             )
-    else:
-        if prev_neighbors is None:
-            if graph is None:
-                raise ValueError(
-                    "When `reorder_idx` is provided, you must also provide "
-                    "either `prev_neighbors` or `graph`."
-                )
-            else:
-                prev_neighbors = _get_prev_neighbors(graph, reorder_idx)
+    elif prev_neighbors is None:
+        if graph is None:
+            raise ValueError(
+                "When `reorder_idx` is provided, you must also provide "
+                "either `prev_neighbors` or `graph`."
+            )
+        else:
+            prev_neighbors = _get_prev_neighbors(graph, reorder_idx)
 
     # Validity of the values will be checked by `_check_reorder_idx` in `RNNLayer`
     if check:
@@ -208,9 +203,8 @@ def _get_inv_reorder_idx(graph: AbstractGraph) -> HashableArray:
     visited[0] = True
     for i in range(1, V):
         last_k = idx[i - 1]
-        neighbors = [x for x in adj[last_k] if not visited[x]]
-        if neighbors:
-            k = min([(abs(x - last_k), x) for x in neighbors])[1]
+        if neighbors := [x for x in adj[last_k] if not visited[x]]:
+            k = min((abs(x - last_k), x) for x in neighbors)[1]
         else:
             k = next(x for x in range(V) if not visited[x])
         idx[i] = k
@@ -224,10 +218,7 @@ def _get_snake_prev_neighbors(graph: AbstractGraph) -> HashableArray:
     V, L, M = _get_extent(graph)
 
     def h(i, j):
-        if 0 <= i < L and 0 <= j < M:
-            return i * M + j
-        else:
-            return -1
+        return i * M + j if 0 <= i < L and 0 <= j < M else -1
 
     def get_neighbors(k):
         i, j = divmod(k, M)

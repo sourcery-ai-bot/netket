@@ -277,7 +277,7 @@ class VariationalState(abc.ABC):
         """
         return NotImplemented  # pragma: no cover
 
-    def to_qobj(self):  # -> "qutip.Qobj"
+    def to_qobj(self):    # -> "qutip.Qobj"
         r"""Convert the variational state to a qutip's ket Qobj.
 
         Returns:
@@ -285,7 +285,7 @@ class VariationalState(abc.ABC):
         """
         qutip = import_optional_dependency("qutip", descr="to_qobj")
 
-        q_dims = [list(self.hilbert.shape), [1 for i in range(self.hilbert.size)]]
+        q_dims = [list(self.hilbert.shape), [1 for _ in range(self.hilbert.size)]]
         return qutip.Qobj(np.asarray(self.to_array()), dims=q_dims)
 
 

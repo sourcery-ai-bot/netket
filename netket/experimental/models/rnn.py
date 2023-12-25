@@ -94,16 +94,14 @@ class RNN(ARNNSequential):
     def reorder(self, inputs: Array, axis: int = 0) -> Array:
         if self.reorder_idx is None:
             return inputs
-        else:
-            idx = jnp.asarray(self.reorder_idx)
-            return inputs.take(idx, axis)
+        idx = jnp.asarray(self.reorder_idx)
+        return inputs.take(idx, axis)
 
     def inverse_reorder(self, inputs: Array, axis: int = 0) -> Array:
         if self.inv_reorder_idx is None:
             return inputs
-        else:
-            idx = jnp.asarray(self.inv_reorder_idx)
-            return inputs.take(idx, axis)
+        idx = jnp.asarray(self.inv_reorder_idx)
+        return inputs.take(idx, axis)
 
 
 class LSTMNet(RNN):

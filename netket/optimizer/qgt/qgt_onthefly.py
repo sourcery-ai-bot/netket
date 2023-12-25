@@ -99,14 +99,13 @@ def QGTOnTheFly(
             raise IllegalHolomorphicDeclarationForRealParametersError()
         else:
             mode = "holomorphic"
-    else:
-        if not nkjax.tree_leaf_iscomplex(vstate.parameters):
-            mode = "real"
-        else:
-            if holomorphic is None:
-                warnings.warn(HolomorphicUndeclaredWarning(), UserWarning)
-            mode = "complex"
+    elif nkjax.tree_leaf_iscomplex(vstate.parameters):
+        if holomorphic is None:
+            warnings.warn(HolomorphicUndeclaredWarning(), UserWarning)
+        mode = "complex"
 
+    else:
+        mode = "real"
     nkjax.jacobian_default_mode(
         vstate._apply_fun,
         vstate.parameters,
@@ -205,10 +204,10 @@ def onthefly_mat_treevec(
 
     # if has a ndim it's an array and not a pytree
     if hasattr(vec, "ndim"):
-        if not vec.ndim == 1:
+        if vec.ndim != 1:
             raise ValueError("Unsupported mat-vec for chunks of vectors")
         # If the input is a vector
-        if not nkjax.tree_size(S._params) == vec.size:
+        if nkjax.tree_size(S._params) != vec.size:
             raise ValueError(
                 """Size mismatch between number of parameters ({nkjax.tree_size(S.params)})
                                 and vector size {vec.size}.

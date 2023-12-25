@@ -45,15 +45,14 @@ def dtype_real(typ):
     (eg complex64 -> float32, complex128 ->float64).
     Returns typ otherwise.
     """
-    if np.issubdtype(typ, np.complexfloating):
-        if typ == np.dtype("complex64"):
-            return np.dtype("float32")
-        elif typ == np.dtype("complex128"):
-            return np.dtype("float64")
-        else:
-            raise TypeError(f"Unknown complex floating type {typ}")
-    else:
+    if not np.issubdtype(typ, np.complexfloating):
         return typ
+    if typ == np.dtype("complex64"):
+        return np.dtype("float32")
+    elif typ == np.dtype("complex128"):
+        return np.dtype("float64")
+    else:
+        raise TypeError(f"Unknown complex floating type {typ}")
 
 
 def dtype_complex(typ):

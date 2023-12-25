@@ -37,7 +37,7 @@ class Timeout:
     """
 
     def __post_init__(self):
-        if not self.timeout > 0:
+        if self.timeout <= 0:
             raise ValueError("`timeout` must be larger than 0.")
 
     def reset(self):
@@ -62,7 +62,4 @@ class Timeout:
         if self._init_time is None:
             self._init_time = time.time()
 
-        if time.time() - self._init_time >= self.timeout:
-            return False
-        else:
-            return True
+        return time.time() - self._init_time < self.timeout

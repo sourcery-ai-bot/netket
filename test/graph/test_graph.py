@@ -367,12 +367,9 @@ def test_nodes():
 
 def tonx(graph):
     adl = graph.adjacency_list()
-    i = 0
     edges = []
-    for els in adl:
-        for el in els:
-            edges.append([i, el])
-        i += 1
+    for i, els in enumerate(adl):
+        edges.extend([i, el] for el in els)
     if edges:
         return nx.from_edgelist(edges)
 
@@ -461,7 +458,6 @@ def test_lattice_is_connected():
 
 def test_adjacency_list():
     for graph in graphs:
-        neigh = []
         g = nx.Graph()
 
         for i in range(graph.n_nodes):
@@ -469,8 +465,7 @@ def test_adjacency_list():
 
         for edge in graph.edges():
             g.add_edge(edge[0], edge[1])
-        for i in range(graph.n_nodes):
-            neigh.append(set(g.neighbors(i)))
+        neigh = [set(g.neighbors(i)) for i in range(graph.n_nodes)]
         dim = len(neigh)
         adl = graph.adjacency_list()
 

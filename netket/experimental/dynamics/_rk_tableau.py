@@ -95,10 +95,7 @@ class TableauRKExplicit:
         Returns the order of the embedded error estimate for a tableau
         supporting adaptive step size. Otherwise, None is returned.
         """
-        if not self.is_adaptive:
-            return None
-        else:
-            return self.order[1]
+        return None if not self.is_adaptive else self.order[1]
 
     def _compute_slopes(
         self,
@@ -141,15 +138,13 @@ class TableauRKExplicit:
         k = self._compute_slopes(f, t, dt, y_t)
 
         b = self.b[0] if self.b.ndim == 2 else self.b
-        y_tp1 = jax.tree_map(
+        return jax.tree_map(
             lambda y_t, k: y_t
             + jnp.asarray(dt, dtype=y_t.dtype)
             * jnp.tensordot(jnp.asarray(b, dtype=k.dtype), k, axes=1),
             y_t,
             k,
         )
-
-        return y_tp1
 
     def step_with_error(
         self,

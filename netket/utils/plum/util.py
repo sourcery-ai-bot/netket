@@ -122,7 +122,7 @@ def is_in_class(f: Callable) -> bool:
 
 
 def _split_parts(f: Callable) -> List[str]:
-    qualified_name = f.__module__ + "." + f.__qualname__
+    qualified_name = f"{f.__module__}.{f.__qualname__}"
     return qualified_name.split(".")
 
 
@@ -154,12 +154,7 @@ def get_context(f) -> str:
         str: The context of `f`.
     """
     parts = _split_parts(f)
-    if is_in_class(f):
-        # Split off function name and class.
-        return ".".join(parts[:-2])
-    else:
-        # Split off function name only.
-        return ".".join(parts[:-1])
+    return ".".join(parts[:-2]) if is_in_class(f) else ".".join(parts[:-1])
 
 
 def argsort(indexable):

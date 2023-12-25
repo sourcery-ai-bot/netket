@@ -234,11 +234,7 @@ class MCState(VariationalState):
                 "can be specified at the same time."
             )
 
-        if sample_fun is not None:
-            self._sample_fun = sample_fun
-        else:
-            self._sample_fun = self._apply_fun
-
+        self._sample_fun = sample_fun if sample_fun is not None else self._apply_fun
         self.mutable = mutable
         self.training_kwargs = flax.core.freeze(training_kwargs)
 
@@ -301,9 +297,7 @@ class MCState(VariationalState):
     def sampler(self, sampler: Sampler):
         if not isinstance(sampler, Sampler):
             raise TypeError(
-                "The sampler should be a subtype of netket.sampler.Sampler, but {} is not.".format(
-                    type(sampler)
-                )
+                f"The sampler should be a subtype of netket.sampler.Sampler, but {type(sampler)} is not."
             )
 
         # Save the old `n_samples` before the new `sampler` is set.
@@ -379,9 +373,7 @@ class MCState(VariationalState):
     def n_discard_per_chain(self, n_discard_per_chain: Optional[int]):
         if n_discard_per_chain is not None and n_discard_per_chain < 0:
             raise ValueError(
-                "Invalid number of discarded samples: n_discard_per_chain={}".format(
-                    n_discard_per_chain
-                )
+                f"Invalid number of discarded samples: n_discard_per_chain={n_discard_per_chain}"
             )
 
         # don't discard if the sampler is exact
@@ -747,14 +739,17 @@ def local_estimators(
 
 # serialization
 def serialize_MCState(vstate):
-    state_dict = {
-        "variables": serialization.to_state_dict(extract_replicated(vstate.variables)),
-        "sampler_state": serialization.to_state_dict(vstate._sampler_state_previous),
+    return {
+        "variables": serialization.to_state_dict(
+            extract_replicated(vstate.variables)
+        ),
+        "sampler_state": serialization.to_state_dict(
+            vstate._sampler_state_previous
+        ),
         "n_samples": vstate.n_samples,
         "n_discard_per_chain": vstate.n_discard_per_chain,
         "chunk_size": vstate.chunk_size,
     }
-    return state_dict
 
 
 def deserialize_MCState(vstate, state_dict):

@@ -167,7 +167,7 @@ def _document(f: Callable, f_name: Optional[str] = None) -> str:
     # If `sphinx` is imported, assume that we're building the documentation. In that
     # case, display the function definition in a nice way.
     if "sphinx" in sys.modules:
-        title = ".. py:function:: " + title + "\n   :noindex:"
+        title = f".. py:function:: {title}" + "\n   :noindex:"
     else:
         title = "<separator>\n\n" + title
     title += "\n"  # Add a newline to separate the title from the body.
@@ -239,7 +239,7 @@ class Resolver:
             self.methods.append(method)
 
         # Use a double negation for slightly better performance.
-        self.is_faithful = not any(not s.signature.is_faithful for s in self.methods)
+        self.is_faithful = all(s.signature.is_faithful for s in self.methods)
 
     def __len__(self) -> int:
         return len(self.methods)
@@ -300,7 +300,7 @@ class Resolver:
             # attempt to resolve the ambiguity using the precedence of the signatures.
             precedences = [c.signature.precedence for c in candidates]
             max_precendence = max(precedences)
-            if sum([p == max_precendence for p in precedences]) == 1:
+            if precedences.count(max_precendence) == 1:
                 return candidates[precedences.index(max_precendence)]
             else:
                 # Could not resolve the ambiguity, so error.

@@ -54,7 +54,7 @@ class LangevinRule(MetropolisRule):
         self.dt = dt
         self.chunk_size = chunk_size
 
-    def transition(rule, sampler, machine, parameters, state, key, r):
+    def transition(self, sampler, machine, parameters, state, key, r):
         if jnp.issubdtype(r.dtype, jnp.complexfloating):
             raise TypeError("LangevinRule does not work with complex basis elements.")
 
@@ -74,8 +74,8 @@ class LangevinRule(MetropolisRule):
             machine.apply,
             parameters,
             sampler.machine_pow,
-            rule.dt,
-            chunk_size=rule.chunk_size,
+            self.dt,
+            chunk_size=self.chunk_size,
             return_log_corr=True,
         )
 
@@ -121,9 +121,8 @@ def _langevin_step(
 
     if not return_log_corr:
         return rp
-    else:
-        log_q_xp = -0.5 * jnp.sum(noise_vec**2, axis=-1)
-        grad_logp_rp = nkjax.vmap_chunked(_single_grad, chunk_size=chunk_size)(rp)
-        log_q_x = -jnp.sum((r - rp - dt * grad_logp_rp) ** 2, axis=-1) / (4 * dt)
+    log_q_xp = -0.5 * jnp.sum(noise_vec**2, axis=-1)
+    grad_logp_rp = nkjax.vmap_chunked(_single_grad, chunk_size=chunk_size)(rp)
+    log_q_x = -jnp.sum((r - rp - dt * grad_logp_rp) ** 2, axis=-1) / (4 * dt)
 
-        return rp, log_q_x - log_q_xp
+    return rp, log_q_x - log_q_xp

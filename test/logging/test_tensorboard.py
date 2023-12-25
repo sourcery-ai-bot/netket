@@ -33,7 +33,7 @@ def test_tblog(vstate, tmp_path):
     # skip test if tensorboardX not installed
     pytest.importorskip("tensorboardX")
 
-    path = str(tmp_path) + "/dir1/dir2"
+    path = f"{str(tmp_path)}/dir1/dir2"
 
     log = nk.logging.TensorBoardLog(path)
 
@@ -43,17 +43,17 @@ def test_tblog(vstate, tmp_path):
     log.flush()
     del log
 
-    files = glob.glob(path + "/*")
-    assert len(files) >= 1
+    files = glob.glob(f"{path}/*")
+    assert files
 
 
 def test_lazy_init(tmp_path):
     # skip test if tensorboardX not installed
     pytest.importorskip("tensorboardX")
 
-    path = str(tmp_path) + "/dir1"
+    path = f"{str(tmp_path)}/dir1"
 
     nk.logging.TensorBoardLog(path)
 
-    files = glob.glob(path + "/*")
-    assert len(files) == 0
+    files = glob.glob(f"{path}/*")
+    assert not files

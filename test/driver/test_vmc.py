@@ -36,10 +36,7 @@ def _setup_vmc(dtype=np.float32, sr=True):
     X = [[0, 1], [1, 0]]
     sx = nk.operator.LocalOperator(hi, [X] * L, [[i] for i in range(L)])
 
-    if sr:
-        sr_config = nk.optimizer.SR(holomorphic=True if dtype is complex else False)
-    else:
-        sr_config = None
+    sr_config = nk.optimizer.SR(holomorphic=dtype is complex) if sr else None
     driver = nk.VMC(ha, op, variational_state=vs, preconditioner=sr_config)
 
     return ha, sx, vs, sa, driver
@@ -130,7 +127,7 @@ def test_vmc_functions():
 def test_vmc_progress_bar():
     ha, sx, ma, sampler, driver = _setup_vmc()
     tempdir = tempfile.mkdtemp()
-    prefix = tempdir + "/vmc_progressbar_test"
+    prefix = f"{tempdir}/vmc_progressbar_test"
 
     f = StringIO()
     with redirect_stderr(f):

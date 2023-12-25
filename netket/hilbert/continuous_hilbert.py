@@ -47,7 +47,7 @@ class ContinuousHilbert(AbstractHilbert):
         """
         self._extent = tuple(domain)
         self._pbc = tuple(pbc)
-        if not len(self._extent) == len(self._pbc):
+        if len(self._extent) != len(self._pbc):
             raise ValueError(
                 """`pbc` must be either a bool or a tuple indicating the periodicity of each spatial dimension."""
             )

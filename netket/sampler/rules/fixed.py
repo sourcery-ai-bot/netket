@@ -23,7 +23,7 @@ class FixedRule(MetropolisRule):
     You can use it to make a CombinedRule not act on a certain subspace at all.
     """
 
-    def transition(rule, sampler, machine, parameters, state, key, σ):
+    def transition(self, sampler, machine, parameters, state, key, σ):
         return σ, None
 
     def __repr__(self):

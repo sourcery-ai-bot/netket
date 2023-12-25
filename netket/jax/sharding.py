@@ -65,86 +65,84 @@ def replicate_sharding_decorator_for_get_conn_padded(f):
     # ideally I would like to use a simple shard map with callback, however
     # for that we need to know the shape a priori which would require an extra n_conn call.
 
-    if config.netket_experimental_sharding:
-
-        @wraps(f)
-        def _f(self, x):
-            concrete_or_error(None, x, NumbaOperatorGetConnDuringTracingError, f)
-
-            if isinstance(x, jax.Array) and len(x.devices()) > 1:  # sharded
-                if config.netket_experimental_sharding_numba_wrapper_warning:
-                    warnings.warn(
-                        "You are using the experimental wrapper for numba operators acting on a sharded input array. "
-                        "Please consider rewriting your operator in jax."
-                        "Some of the built-in netket operators can be converted into jax by calling .to_jax_operator()"
-                        "If you have to use this wrapper and find that it does not work properly, "
-                        "please open an issue at https://github.com/netket/netket/issues."
-                        "To silence this warning, set the environment variable `NETKET_EXPERIMENTAL_SHARDING_NUMBA_WRAPPER_WARNING=0`",
-                        stacklevel=2,
-                    )
-
-                if isinstance(x.sharding, jax.sharding.GSPMDSharding):
-                    x = _convert_gspmdsharding_to_positionalsharding(x)
-
-                xp_mels_np = []
-                n_conn_dev = []
-                for s in x.addressable_shards:
-                    xp, mels = f(self, s.data)
-                    xp_mels_np.append((xp, mels))
-                    n_conn_dev.append(
-                        jax.device_put(
-                            np.array(
-                                [
-                                    mels.shape[-1],
-                                ]
-                            ),
-                            s.device,
-                        )
-                    )
-                # numba might pad every x differently, so here we pad all to the common max over devices and all processes
-                n_conn = jax.make_array_from_single_device_arrays(
-                    (len(x.devices()),),
-                    PositionalSharding(list(x.devices())),
-                    n_conn_dev,
-                )
-                n_conn_max = int(jax.jit(lambda x: x.max())(n_conn))
-                xp_dev = []
-                mels_dev = []
-                for (xp, mels), s in zip(xp_mels_np, x.addressable_shards):
-                    npad = n_conn_max - mels.shape[-1]
-                    if npad > 0:
-                        mels = np.pad(
-                            mels, pad_width=((0, 0),) * (mels.ndim - 1) + ((0, npad),)
-                        )
-                        xp = np.pad(
-                            xp,
-                            pad_width=((0, 0),) * (mels.ndim - 1)
-                            + ((0, npad),)
-                            + ((0, 0),),
-                        )
-                        xp[..., -npad:, :] = xp[..., :1, :]
-                    xp_dev.append(jax.device_put(xp, s.device))
-                    mels_dev.append(jax.device_put(mels, s.device))
-                shape = x.shape[:-1] + (n_conn_max,)
-                xp = jax.make_array_from_single_device_arrays(
-                    shape + x.shape[-1:],
-                    x.sharding.reshape(
-                        x.sharding.shape[:-1] + (1,) + x.sharding.shape[-1:]
-                    ),
-                    xp_dev,
-                )
-                mels = jax.make_array_from_single_device_arrays(
-                    shape, x.sharding, mels_dev
-                )
-                return xp, mels
-            elif isinstance(x, jax.Array):  # and len(x.devices()) == 1; single device
-                return jax.device_put(f(self, x), device=x.device())
-            else:
-                return f(self, x)
-
-        return _f
-    else:
+    if not config.netket_experimental_sharding:
         return f
+    @wraps(f)
+    def _f(self, x):
+        concrete_or_error(None, x, NumbaOperatorGetConnDuringTracingError, f)
+
+        if isinstance(x, jax.Array) and len(x.devices()) > 1:  # sharded
+            if config.netket_experimental_sharding_numba_wrapper_warning:
+                warnings.warn(
+                    "You are using the experimental wrapper for numba operators acting on a sharded input array. "
+                    "Please consider rewriting your operator in jax."
+                    "Some of the built-in netket operators can be converted into jax by calling .to_jax_operator()"
+                    "If you have to use this wrapper and find that it does not work properly, "
+                    "please open an issue at https://github.com/netket/netket/issues."
+                    "To silence this warning, set the environment variable `NETKET_EXPERIMENTAL_SHARDING_NUMBA_WRAPPER_WARNING=0`",
+                    stacklevel=2,
+                )
+
+            if isinstance(x.sharding, jax.sharding.GSPMDSharding):
+                x = _convert_gspmdsharding_to_positionalsharding(x)
+
+            xp_mels_np = []
+            n_conn_dev = []
+            for s in x.addressable_shards:
+                xp, mels = f(self, s.data)
+                xp_mels_np.append((xp, mels))
+                n_conn_dev.append(
+                    jax.device_put(
+                        np.array(
+                            [
+                                mels.shape[-1],
+                            ]
+                        ),
+                        s.device,
+                    )
+                )
+            # numba might pad every x differently, so here we pad all to the common max over devices and all processes
+            n_conn = jax.make_array_from_single_device_arrays(
+                (len(x.devices()),),
+                PositionalSharding(list(x.devices())),
+                n_conn_dev,
+            )
+            n_conn_max = int(jax.jit(lambda x: x.max())(n_conn))
+            xp_dev = []
+            mels_dev = []
+            for (xp, mels), s in zip(xp_mels_np, x.addressable_shards):
+                npad = n_conn_max - mels.shape[-1]
+                if npad > 0:
+                    mels = np.pad(
+                        mels, pad_width=((0, 0),) * (mels.ndim - 1) + ((0, npad),)
+                    )
+                    xp = np.pad(
+                        xp,
+                        pad_width=((0, 0),) * (mels.ndim - 1)
+                        + ((0, npad),)
+                        + ((0, 0),),
+                    )
+                    xp[..., -npad:, :] = xp[..., :1, :]
+                xp_dev.append(jax.device_put(xp, s.device))
+                mels_dev.append(jax.device_put(mels, s.device))
+            shape = x.shape[:-1] + (n_conn_max,)
+            xp = jax.make_array_from_single_device_arrays(
+                shape + x.shape[-1:],
+                x.sharding.reshape(
+                    x.sharding.shape[:-1] + (1,) + x.sharding.shape[-1:]
+                ),
+                xp_dev,
+            )
+            mels = jax.make_array_from_single_device_arrays(
+                shape, x.sharding, mels_dev
+            )
+            return xp, mels
+        elif isinstance(x, jax.Array):  # and len(x.devices()) == 1; single device
+            return jax.device_put(f(self, x), device=x.device())
+        else:
+            return f(self, x)
+
+    return _f
 
 
 _identity = lambda x: x
@@ -179,36 +177,35 @@ def distribute_to_devices_along_axis(
         mask: a mask indicating wether a given element is part of the original data (True) of of the padding (False)
               only returned if pad=True
     """
-    if config.netket_experimental_sharding:
-        if pad:
-            n = inp_data.shape[0]
-            # pad to the next multiple of device_count
-            device_count = jax.device_count()
-            n_pad = math.ceil(inp_data.shape[0] / device_count) * device_count - n
-            inp_data = jnp.pad(inp_data, ((0, n_pad), (0, 0)))
-            if pad_value is not None and n_pad > 0:
-                inp_data = inp_data.at[-n_pad:].set(pad_value)
-
-        shape = [
-            1,
-        ] * inp_data.ndim
-        shape[axis] = -1
-        sharding = PositionalSharding(devices).reshape(shape)
-        out_data = jax.jit(_identity, out_shardings=sharding)(inp_data)
-        if pad:
-            if n_pad > 0:
-                mask = jax.jit(
-                    _prepare_mask,
-                    out_shardings=sharding.reshape(-1),
-                    static_argnums=(0, 1),
-                )(n, n_pad)
-            else:
-                mask = None
-            return out_data, mask
-        else:
-            return out_data
-    else:
+    if not config.netket_experimental_sharding:
         return inp_data
+    if pad:
+        n = inp_data.shape[0]
+        # pad to the next multiple of device_count
+        device_count = jax.device_count()
+        n_pad = math.ceil(inp_data.shape[0] / device_count) * device_count - n
+        inp_data = jnp.pad(inp_data, ((0, n_pad), (0, 0)))
+        if pad_value is not None and n_pad > 0:
+            inp_data = inp_data.at[-n_pad:].set(pad_value)
+
+    shape = [
+        1,
+    ] * inp_data.ndim
+    shape[axis] = -1
+    sharding = PositionalSharding(devices).reshape(shape)
+    out_data = jax.jit(_identity, out_shardings=sharding)(inp_data)
+    if not pad:
+        return out_data
+    mask = (
+        jax.jit(
+            _prepare_mask,
+            out_shardings=sharding.reshape(-1),
+            static_argnums=(0, 1),
+        )(n, n_pad)
+        if n_pad > 0
+        else None
+    )
+    return out_data, mask
 
 
 def extract_replicated(t):
@@ -417,64 +414,63 @@ def sharding_decorator(f, sharded_args_tree, reduction_op_tree=False):
         y4 = jax.jit(sharding_decorator(looped_computation4, sharded_args_tree=(True, False)))(x, obj_wrapped)
     """
 
-    if config.netket_experimental_sharding:
-        if not isinstance(sharded_args_tree, tuple):
-            sharded_args_tree = (sharded_args_tree,)
-        sharded_args, args_treedef = jax.tree_util.tree_flatten(sharded_args_tree)
-        reduction_op, out_treedef = jax.tree_util.tree_flatten(reduction_op_tree)
+    if not config.netket_experimental_sharding:
+        return f
+    if not isinstance(sharded_args_tree, tuple):
+        sharded_args_tree = (sharded_args_tree,)
+    sharded_args, args_treedef = jax.tree_util.tree_flatten(sharded_args_tree)
+    reduction_op, out_treedef = jax.tree_util.tree_flatten(reduction_op_tree)
 
-        @wraps(f)
-        def _fun(*args):
-            args = args_treedef.flatten_up_to(args)
+    @wraps(f)
+    def _fun(*args):
+        args = args_treedef.flatten_up_to(args)
 
-            _sele = lambda cond, xs: tuple(x for c, x in zip(cond, xs) if c)
-            _not = lambda t: tuple(not x for x in t)
-            _sele2 = lambda cond, x, y: tuple(x if c else y for c in cond)
+        _sele = lambda cond, xs: tuple(x for c, x in zip(cond, xs) if c)
+        _not = lambda t: tuple(not x for x in t)
+        _sele2 = lambda cond, x, y: tuple(x if c else y for c in cond)
 
-            # workaround for shard_map not supporting non-array args part 1/2
-            nonarray_args = tuple(not hasattr(a, "dtype") for a in args)
-            args = tuple(
-                Partial(partial(lambda x: x, a)) if c else a
-                for a, c in zip(args, nonarray_args)
-            )
+        # workaround for shard_map not supporting non-array args part 1/2
+        nonarray_args = tuple(not hasattr(a, "dtype") for a in args)
+        args = tuple(
+            Partial(partial(lambda x: x, a)) if c else a
+            for a, c in zip(args, nonarray_args)
+        )
 
-            mesh = Mesh(jax.devices(), axis_names=("i"))
-            in_specs = _sele2(sharded_args, P("i"), P())
-            out_specs = out_treedef.unflatten(_sele2(reduction_op, P(), P("i")))
+        mesh = Mesh(jax.devices(), axis_names=("i"))
+        in_specs = _sele2(sharded_args, P("i"), P())
+        out_specs = out_treedef.unflatten(_sele2(reduction_op, P(), P("i")))
 
-            @partial(shard_map, mesh=mesh, in_specs=in_specs, out_specs=out_specs)
-            def _f(*args):
-                # workaround for shard_map not supporting non-array args part 2/2
-                args = tuple(a() if c else a for a, c in zip(args, nonarray_args))
+        @partial(shard_map, mesh=mesh, in_specs=in_specs, out_specs=out_specs)
+        def _f(*args):
+            # workaround for shard_map not supporting non-array args part 2/2
+            args = tuple(a() if c else a for a, c in zip(args, nonarray_args))
 
-                res = f(*args_treedef.unflatten(args))
+            res = f(*args_treedef.unflatten(args))
 
-                # apply reductions
-                # _id = lambda x: x
-                # _wrap = lambda x: Partial(lambda : x)
-                def _sele_op(o):
-                    if o is False:
-                        return lambda x: x
-                    if o is True:
-                        return lambda x: Partial(partial(lambda x: x, x))
-                    else:
-                        return partial(jax.tree_map, partial(o, axis_name="i"))
+            # apply reductions
+            # _id = lambda x: x
+            # _wrap = lambda x: Partial(lambda : x)
+            def _sele_op(o):
+                if o is False:
+                    return lambda x: x
+                if o is True:
+                    return lambda x: Partial(partial(lambda x: x, x))
+                else:
+                    return partial(jax.tree_map, partial(o, axis_name="i"))
 
-                reductions = [_sele_op(o) for o in reduction_op]
-                res = out_treedef.flatten_up_to(res)
-                res = [f(r) for f, r in zip(reductions, res)]
-                res = out_treedef.unflatten(res)
-                return res
-
-            res = _f(*args)
+            reductions = [_sele_op(o) for o in reduction_op]
             res = out_treedef.flatten_up_to(res)
-            res = [a() if c is True else a for a, c in zip(res, reduction_op)]
+            res = [f(r) for f, r in zip(reductions, res)]
             res = out_treedef.unflatten(res)
             return res
 
-        return _fun
+        res = _f(*args)
+        res = out_treedef.flatten_up_to(res)
+        res = [a() if c is True else a for a, c in zip(res, reduction_op)]
+        res = out_treedef.unflatten(res)
+        return res
 
-    return f
+    return _fun
 
 
 def device_count_per_rank():
@@ -484,10 +480,9 @@ def device_count_per_rank():
     Returns:
         jax.device_count() if config.netket_experimental_sharding is True, and 1 otherwise
     """
-    if config.netket_experimental_sharding:
-        if mpi.n_nodes > 1:
-            # this should never be triggered as we disable mpi when sharding
-            raise NotImplementedError("hybrid mpi and sharding is not not supported")
-        return jax.device_count()
-    else:  # mpi or serial
+    if not config.netket_experimental_sharding:
         return 1
+    if mpi.n_nodes > 1:
+        # this should never be triggered as we disable mpi when sharding
+        raise NotImplementedError("hybrid mpi and sharding is not not supported")
+    return jax.device_count()

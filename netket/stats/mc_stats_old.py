@@ -39,10 +39,7 @@ def _get_blocks(data, block_size):
 def _block_variance(data, l):
     blocks = _get_blocks(data, l)
     ts = _total_size(blocks)
-    if ts > 0:
-        return _var(blocks), ts
-    else:
-        return jnp.nan, 0
+    return (_var(blocks), ts) if ts > 0 else (jnp.nan, 0)
 
 
 def _batch_variance(data):

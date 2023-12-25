@@ -32,12 +32,11 @@ def _to_iterable(maybe_iterable):
 
     Ensure the result is iterable. If the input is not iterable, it is wrapped into a tuple.
     """
-    if hasattr(maybe_iterable, "__iter__"):
-        surely_iterable = maybe_iterable
-    else:
-        surely_iterable = (maybe_iterable,)
-
-    return surely_iterable
+    return (
+        maybe_iterable
+        if hasattr(maybe_iterable, "__iter__")
+        else (maybe_iterable,)
+    )
 
 
 # Note: to implement a new Driver (see also _vmc.py for an example)
@@ -68,7 +67,7 @@ class AbstractVariationalDriver(abc.ABC):
         self._variational_state = variational_state
         self.optimizer = optimizer
 
-    def _forward_and_backward(self):  # pragma: no cover
+    def _forward_and_backward(self):    # pragma: no cover
         """
         Performs the forward and backward pass at the same time.
         Concrete drivers should either override this method, or override individually
@@ -78,8 +77,7 @@ class AbstractVariationalDriver(abc.ABC):
             the update for the weights.
         """
         self._forward()
-        dp = self._backward()
-        return dp
+        return self._backward()
 
     def _forward(self):
         """
@@ -250,10 +248,10 @@ class AbstractVariationalDriver(abc.ABC):
         callback_stop = False
 
         with tqdm(
-            total=n_iter,
-            disable=not show_progress,
-            dynamic_ncols=True,
-        ) as pbar:
+                total=n_iter,
+                disable=not show_progress,
+                dynamic_ncols=True,
+            ) as pbar:
             old_step = self.step_count
             first_step = True
 
@@ -263,7 +261,7 @@ class AbstractVariationalDriver(abc.ABC):
 
                 # if the cost-function is defined then report it in the progress bar
                 if self._loss_stats is not None:
-                    pbar.set_postfix_str(self._loss_name + "=" + str(self._loss_stats))
+                    pbar.set_postfix_str(f"{self._loss_name}={str(self._loss_stats)}")
                     log_data[self._loss_name] = self._loss_stats
 
                 # Execute callbacks before loggers because they can append to log_data

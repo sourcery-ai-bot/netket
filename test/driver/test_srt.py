@@ -65,7 +65,7 @@ class RBM(nn.Module):
 
 def _setup(*, complex=True, machine=None):
     L = 4
-    Ns = L * L
+    Ns = L**2
     lattice = nk.graph.Square(L, max_neighbor_order=2)
     hi = nk.hilbert.Spin(s=1 / 2, total_sz=0, N=lattice.n_nodes)
     H = nk.operator.Heisenberg(

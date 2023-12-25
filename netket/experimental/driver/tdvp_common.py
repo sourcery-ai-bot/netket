@@ -122,11 +122,7 @@ class TDVPBaseDriver(AbstractVariationalDriver):
 
     @integrator.setter
     def integrator(self, integrator):
-        if self._integrator is None:
-            t0 = self.t0
-        else:
-            t0 = self.t
-
+        t0 = self.t0 if self._integrator is None else self.t
         self._integrator_constructor = integrator
 
         self._integrator = integrator(
@@ -246,10 +242,7 @@ class TDVPBaseDriver(AbstractVariationalDriver):
 
             step_accepted = False
             while not step_accepted:
-                if not always_stop and len(tstops) > 0:
-                    max_dt = tstops[0] - self.t
-                else:
-                    max_dt = None
+                max_dt = tstops[0] - self.t if not always_stop and len(tstops) > 0 else None
                 step_accepted = self._integrator.step(max_dt=max_dt)
                 if self._integrator.errors:
                     raise RuntimeError(
@@ -327,11 +320,11 @@ class TDVPBaseDriver(AbstractVariationalDriver):
 
         t_end = np.asarray(self.t + T)
         with tqdm(
-            total=t_end,
-            disable=not show_progress,
-            unit_scale=True,
-            dynamic_ncols=True,
-        ) as pbar:
+                total=t_end,
+                disable=not show_progress,
+                unit_scale=True,
+                dynamic_ncols=True,
+            ) as pbar:
             first_step = True
 
             # We need a closure to pass to self._iter in order to update the progress bar even if
@@ -361,11 +354,7 @@ class TDVPBaseDriver(AbstractVariationalDriver):
                 self._postfix = {"n": self.step_count}
                 # if the cost-function is defined then report it in the progress bar
                 if self._loss_stats is not None:
-                    self._postfix.update(
-                        {
-                            self._loss_name: str(self._loss_stats),
-                        }
-                    )
+                    self._postfix[self._loss_name] = str(self._loss_stats)
                     log_data[self._loss_name] = self._loss_stats
                 pbar.set_postfix(self._postfix)
 
@@ -490,4 +479,3 @@ def odefun_host_callback(state, driver, *args, **kwargs):
         # pack args and kwargs together, since host_callback passes a single argument:
         (args, kwargs),
     )
-    return odefun(state, driver, *args, **kwargs)

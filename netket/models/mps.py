@@ -74,7 +74,7 @@ class MPSPeriodic(nn.Module):
 
         # determine transformation from local states to indices
         local_states = np.array(self.hilbert.local_states)
-        loc_vals_spacing = np.roll(local_states, -1)[0:-1] - local_states[0:-1]
+        loc_vals_spacing = np.roll(local_states, -1)[:-1] - local_states[:-1]
         if np.max(loc_vals_spacing) == np.min(loc_vals_spacing):
             self._loc_vals_spacing = jnp.array(loc_vals_spacing[0])
         else:
@@ -92,32 +92,24 @@ class MPSPeriodic(nn.Module):
             )
 
         # determine shape of unit cell
-        if self.symperiod is None:
-            self._symperiod = L
-        else:
-            self._symperiod = self.symperiod
-
-        if L % self._symperiod == 0 and self._symperiod > 0:
-            if self.diag:
-                unit_cell_shape = (self._symperiod, phys_dim, self.bond_dim)
-            else:
-                unit_cell_shape = (
-                    self._symperiod,
-                    phys_dim,
-                    self.bond_dim,
-                    self.bond_dim,
-                )
-        else:
+        self._symperiod = L if self.symperiod is None else self.symperiod
+        if L % self._symperiod != 0 or self._symperiod <= 0:
             raise AssertionError(
                 "The number of degrees of freedom of the Hilbert space needs to be a multiple of the period of the MPS"
             )
 
-        # define diagonal tensors with correct unit cell shape
         if self.diag:
+            unit_cell_shape = (self._symperiod, phys_dim, self.bond_dim)
             iden_tensors = jnp.ones(
                 (self._symperiod, phys_dim, self.bond_dim), dtype=self.param_dtype
             )
         else:
+            unit_cell_shape = (
+                self._symperiod,
+                phys_dim,
+                self.bond_dim,
+                self.bond_dim,
+            )
             iden_tensors = jnp.repeat(
                 jnp.eye(self.bond_dim, dtype=self.param_dtype)[jnp.newaxis, :, :],
                 self._symperiod * phys_dim,

@@ -98,10 +98,7 @@ class IsingJax(IsingBase, DiscreteJaxOperator):
 
 def _ising_mels_jax(x, edges, h, J):
     batch_dims = x.shape[:-1]
-    if isinstance(h, StaticZero):
-        max_conn_size = 1
-    else:
-        max_conn_size = x.shape[-1] + 1
+    max_conn_size = 1 if isinstance(h, StaticZero) else x.shape[-1] + 1
     mels = jnp.zeros(
         (
             *batch_dims,

@@ -48,9 +48,8 @@ def _create_fn(
 
 
 def get_class_globals(clz):
-    if clz.__module__ in sys.modules:
-        globals = sys.modules[clz.__module__].__dict__.copy()
-    else:
-        globals = {}
-
-    return globals
+    return (
+        sys.modules[clz.__module__].__dict__.copy()
+        if clz.__module__ in sys.modules
+        else {}
+    )

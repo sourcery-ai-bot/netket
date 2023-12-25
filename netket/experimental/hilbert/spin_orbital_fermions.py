@@ -90,7 +90,7 @@ class SpinOrbitalFermions(HomogeneousHilbert):
             n_fermions_per_spin = n_fermions
             n_fermions = None
 
-        if not (isinstance(n_fermions, int) or n_fermions is None):
+        if not isinstance(n_fermions, int) and n_fermions is not None:
             raise TypeError(
                 """
                 The global `n_fermions` constraint must be an integer or be left unspecified.
@@ -99,11 +99,7 @@ class SpinOrbitalFermions(HomogeneousHilbert):
                 """
             )
 
-        if s is None:
-            spin_size = 1
-        else:
-            spin_size = round(2 * s + 1)
-
+        spin_size = 1 if s is None else round(2 * s + 1)
         total_size = n_orbitals * spin_size
 
         if spin_size == 1:
@@ -114,10 +110,9 @@ class SpinOrbitalFermions(HomogeneousHilbert):
 
             n_fermions_per_spin = (n_fermions,)
             hilbert = Fock(n_max=1, N=n_orbitals, n_particles=n_fermions)
-        else:
-            if n_fermions_per_spin is not None and n_fermions is not None:
-                raise ValueError(
-                    """
+        elif n_fermions_per_spin is not None and n_fermions is not None:
+            raise ValueError(
+                """
                                  Cannot specify the per-subsector constraint `n_fermions_per_spin`
                                  at the same time as the global constraint `n_fermions`.
 
@@ -127,31 +122,31 @@ class SpinOrbitalFermions(HomogeneousHilbert):
                                  with each spin component (and therefore the total number of fermions
                                  as well) you should specify `n_fermions_per_spin`.
                                  """
+            )
+        elif n_fermions_per_spin is not None:
+            if not isinstance(n_fermions_per_spin, Iterable):
+                raise TypeError(
+                    f"n_fermions_per_spin={n_fermions_per_spin} (whose type is {type(n_fermions_per_spin)}) "
+                    "must be a list of integers or None describing the number of "
+                    f"fermions in each of the {total_size} spin subsectors."
                 )
-            elif n_fermions_per_spin is not None:
-                if not isinstance(n_fermions_per_spin, Iterable):
-                    raise TypeError(
-                        f"n_fermions_per_spin={n_fermions_per_spin} (whose type is {type(n_fermions_per_spin)}) "
-                        "must be a list of integers or None describing the number of "
-                        f"fermions in each of the {total_size} spin subsectors."
-                    )
-                if len(n_fermions_per_spin) != spin_size:
-                    raise ValueError(
-                        "List of number of fermions must equal number of spin components.\n"
-                        f"For s={s}, which has {total_size} components, the same length is "
-                        f"expected."
-                    )
-                n_fermions = sum(n_fermions_per_spin)
-                spin_hilberts = [
-                    Fock(n_max=1, N=n_orbitals, n_particles=Nf)
-                    for Nf in n_fermions_per_spin
-                ]
-                hilbert = TensorDiscreteHilbert(*spin_hilberts)
-            else:
-                # fixed fermion number but multiple spins subspaces
-                # global or no constraint
-                n_fermions_per_spin = tuple(None for _ in range(spin_size))
-                hilbert = Fock(n_max=1, N=total_size, n_particles=n_fermions)
+            if len(n_fermions_per_spin) != spin_size:
+                raise ValueError(
+                    "List of number of fermions must equal number of spin components.\n"
+                    f"For s={s}, which has {total_size} components, the same length is "
+                    f"expected."
+                )
+            n_fermions = sum(n_fermions_per_spin)
+            spin_hilberts = [
+                Fock(n_max=1, N=n_orbitals, n_particles=Nf)
+                for Nf in n_fermions_per_spin
+            ]
+            hilbert = TensorDiscreteHilbert(*spin_hilberts)
+        else:
+            # fixed fermion number but multiple spins subspaces
+            # global or no constraint
+            n_fermions_per_spin = tuple(None for _ in range(spin_size))
+            hilbert = Fock(n_max=1, N=total_size, n_particles=n_fermions)
 
         self._fock = hilbert
         """Internal representation of this Hilbert space (Fock or TensorHilbert)."""
@@ -264,12 +259,10 @@ class SpinOrbitalFermions(HomogeneousHilbert):
                     raise ValueError(
                         f"For spin S={self.spin}, valid spin values are odd"
                     )
-            else:
-                # valid values are odd
-                if sz % 2 == 0:
-                    raise ValueError(
-                        f"For spin S={self.spin}, valid spin values are even"
-                    )
+            elif sz % 2 == 0:
+                raise ValueError(
+                    f"For spin S={self.spin}, valid spin values are even"
+                )
             return (sz + int(2 * self.spin)) // 2
 
     def states_to_local_indices(self, x):

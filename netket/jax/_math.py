@@ -37,10 +37,9 @@ def logsumexp_cplx(a: jax.Array, b: Optional[jax.Array] = None, **kwargs) -> jax
     if jnp.iscomplexobj(a) or jnp.iscomplexobj(b):
         # logsumexp uses complex algebra anyway
         return logsumexp(a, b=b, **kwargs)
-    else:
-        a, sgn = logsumexp(a, b=b, **kwargs, return_sign=True)
-        a = a + jnp.where(sgn < 0, 1j * jnp.pi, 0j)
-        return a
+    a, sgn = logsumexp(a, b=b, **kwargs, return_sign=True)
+    a = a + jnp.where(sgn < 0, 1j * jnp.pi, 0j)
+    return a
 
 
 def logdet_cmplx(A: jax.Array) -> jax.Array:

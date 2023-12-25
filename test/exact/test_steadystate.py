@@ -44,9 +44,7 @@ def liouvillian():
         )
         j_ops.append(nk.operator.LocalOperator(hi, sigmam, [i]))
 
-    # Create the liouvillian
-    lind = nk.operator.LocalLiouvillian(ha, j_ops)
-    return lind
+    return nk.operator.LocalLiouvillian(ha, j_ops)
 
 
 @pytest.mark.parametrize("sparse", [True, False])

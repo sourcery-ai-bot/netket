@@ -141,7 +141,7 @@ class TensorRule(MetropolisRule):
                 log_prob_corr.append(log_prob_corr_i)
 
         σp = jnp.concatenate(σps, axis=-1)
-        log_prob_corr = sum(log_prob_corr) if len(log_prob_corr) > 0 else None
+        log_prob_corr = sum(log_prob_corr) if log_prob_corr else None
         return σp, log_prob_corr
 
     def __repr__(self):

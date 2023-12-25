@@ -36,10 +36,7 @@ def _convert(obj: Any, target_type: TypeHint) -> Any:
     Returns:
         object: `object_to_covert` converted to type of `obj_from_target`.
     """
-    if target_type is Any:
-        return obj
-    else:
-        return _promised_convert(obj, target_type)
+    return obj if target_type is Any else _promised_convert(obj, target_type)
 
 
 _owner_transfer = {}
@@ -141,10 +138,7 @@ class Function(metaclass=_FunctionMeta):
             if len(lines) > 1:
                 doc += "\n" + textwrap.dedent("\n".join(lines[1:]))
 
-        # Append the docstrings of all other implementations to it. Exclude the
-        # docstring from `self._f`, because that one forms the basis (see boave).
-        resolver_doc = self._resolver.doc(exclude=self._f)
-        if resolver_doc:
+        if resolver_doc := self._resolver.doc(exclude=self._f):
             # Add a newline if the documentation is non-empty.
             if doc:
                 doc = doc + "\n\n"
@@ -440,7 +434,7 @@ def _generate_qualname(f: Callable) -> str:
     modname = ""
 
     qualname = getattr(f, "__qualname__", None)
-    if qualname is not None and len(modname) > 0:
+    if qualname is not None and modname != "":
         qualname = f"{modname}{qualname}"
     qualname = qualname.replace("__main__.", "")
 

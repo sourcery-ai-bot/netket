@@ -32,6 +32,4 @@ class Gaussian(nn.Module):
         kernel = jnp.dot(kernel.T, kernel)
 
         kernel, x_in = promote_dtype(kernel, x_in, dtype=None)
-        y = -0.5 * jnp.einsum("...i,ij,...j", x_in, kernel, x_in)
-
-        return y
+        return -0.5 * jnp.einsum("...i,ij,...j", x_in, kernel, x_in)

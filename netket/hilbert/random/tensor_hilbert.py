@@ -51,12 +51,9 @@ def _make_subfun(hilb, i, sub_hi):
 
 @dispatch
 def flip_state_scalar(hilb: TensorHilbert, key, state, index):
-    subfuns = []
-    for i, sub_hi in enumerate(hilb._hilbert_spaces):
-        subfuns.append(_make_subfun(hilb, i, sub_hi))
-
-    branches = []
-    for i in hilb._hilbert_i:
-        branches.append(subfuns[i])
-
+    subfuns = [
+        _make_subfun(hilb, i, sub_hi)
+        for i, sub_hi in enumerate(hilb._hilbert_spaces)
+    ]
+    branches = [subfuns[i] for i in hilb._hilbert_i]
     return jax.lax.switch(index, branches, (key, state, index))

@@ -42,12 +42,10 @@ def _check_total_sz(total_sz, S, size):
             raise ValueError(
                 "Cannot fix the total magnetization: Nspins + 2*totalSz must be even."
             )
-    # else if full-integer (S=1,2)
-    else:
-        if m % 2 != 0:
-            raise ValueError(
-                "Cannot fix the total magnetization to a half-integer number"
-            )
+    elif m % 2 != 0:
+        raise ValueError(
+            "Cannot fix the total magnetization to a half-integer number"
+        )
 
 
 @jit(nopython=True)
@@ -101,10 +99,7 @@ class Spin(HomogeneousHilbert):
         super().__init__(local_states, N, constraints)
 
     def __pow__(self, n):
-        if not self.constrained:
-            return Spin(self._s, self.size * n)
-
-        return NotImplemented
+        return Spin(self._s, self.size * n) if not self.constrained else NotImplemented
 
     def _mul_sametype_(self, other):
         assert type(self) == type(other)

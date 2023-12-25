@@ -22,10 +22,7 @@ from . import struct
 
 def get_afun_if_module(mod_or_fun) -> Callable:
     """Returns the apply function if it's a module. Does nothing otherwise."""
-    if hasattr(mod_or_fun, "apply"):
-        return mod_or_fun.apply
-    else:
-        return mod_or_fun
+    return mod_or_fun.apply if hasattr(mod_or_fun, "apply") else mod_or_fun
 
 
 @struct.dataclass

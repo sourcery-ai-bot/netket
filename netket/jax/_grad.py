@@ -190,10 +190,7 @@ def value_and_grad(
                     out = out_r + 1j * out_j
                     grad = jax.tree_map(lambda re, im: re + 1j * im, grad_r, grad_j)
 
-                    if has_aux:
-                        return out, grad, aux
-                    else:
-                        return out, grad
+                    return (out, grad, aux) if has_aux else (out, grad)
 
                 return grad_rc(*args, **kwargs)
             else:  # R -> R

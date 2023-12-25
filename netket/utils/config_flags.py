@@ -150,7 +150,7 @@ class Config:
     def __repr__(self):
         txt = "\nGlobal configurations for NetKet\n"
         for k, v in self._values.items():
-            txt = txt + f" - {k} = {v}\n"
+            txt = f"{txt} - {k} = {v}\n"
 
         return txt
 

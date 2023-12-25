@@ -14,15 +14,14 @@ def _renyi2_exact(vstate, subsys):
 
     mask = np.zeros(N, dtype=bool)
 
-    if len(subsys) == mask.size or len(subsys) == 0:
+    if len(subsys) in [mask.size, 0]:
         return 0
 
-    else:
-        mask[subsys] = True
+    mask[subsys] = True
 
-        rdm = state_qutip.ptrace(np.arange(N)[mask])
+    rdm = state_qutip.ptrace(np.arange(N)[mask])
 
-        n = 2
-        out = np.log2(np.trace(np.linalg.matrix_power(rdm, n))) / (1 - n)
+    n = 2
+    out = np.log2(np.trace(np.linalg.matrix_power(rdm, n))) / (1 - n)
 
-        return np.absolute(out.real)
+    return np.absolute(out.real)

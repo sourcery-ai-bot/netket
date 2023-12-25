@@ -140,11 +140,7 @@ def total_size(a, axis=None):
     Returns:
         a.size or a.shape[axis], reduced among all MPI processes.
     """
-    if axis is None:
-        l_size = a.size
-    else:
-        l_size = a.shape[axis]
-
+    l_size = a.size if axis is None else a.shape[axis]
     # TODO: This function cannot call Python MPI because if it gets called on shape
     # inference when compiling. Therefore if only one mpi rank is compiling this
     # leads to deadlocks.

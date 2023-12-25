@@ -81,17 +81,17 @@ class StateLog(AbstractLog):
         elif mode == "x":
             mode = "fail"
 
-        if not ((mode == "write") or (mode == "append") or (mode == "fail")):
+        if mode not in {"write", "append", "fail"}:
             raise ValueError(
                 "Mode not recognized: should be one of `[w]rite`, `[a]ppend` or "
                 "`[x]`(fail)."
             )
 
-        if tar is True:
-            file_exists = _path.exists(output_prefix + ".tar")
+        if tar:
+            file_exists = _path.exists(f"{output_prefix}.tar")
         else:
             if output_prefix[-1] != "/":
-                output_prefix = output_prefix + "/"
+                output_prefix += "/"
             file_exists = _path.exists(output_prefix)
 
         if file_exists and mode == "fail":
@@ -128,7 +128,7 @@ class StateLog(AbstractLog):
 
     def _create_tar_file(self):
         if self._tar_file is None:
-            self._tar_file = tarfile.TarFile(self._prefix + ".tar", self._file_mode[0])
+            self._tar_file = tarfile.TarFile(f"{self._prefix}.tar", self._file_mode[0])
             self._file_step = 0
             if self._file_mode == "append":
                 files = self._tar_file.getnames()
@@ -139,11 +139,11 @@ class StateLog(AbstractLog):
     def _check_output_folder(self):
         self._file_step = 0
         if self._file_mode == "write":
-            for file in glob.glob(self._prefix + "*.mpack"):
+            for file in glob.glob(f"{self._prefix}*.mpack"):
                 os.remove(file)
             os.makedirs(self._prefix, exist_ok=True)
         elif self._file_mode == "append":
-            files = glob.glob(self._prefix + "*.mpack")
+            files = glob.glob(f"{self._prefix}*.mpack")
             file_numbers = [int(_path.basename(file)[:-6]) for file in files]
             file_numbers.sort()
             self._file_step = file_numbers[-1] + 1
@@ -172,7 +172,7 @@ class StateLog(AbstractLog):
         )
         if self._tar:
             save_binary_to_tar(
-                self._tar_file, binary_data, str(self._file_step) + ".mpack"
+                self._tar_file, binary_data, f"{str(self._file_step)}.mpack"
             )
         else:
             with open(self._prefix + str(self._file_step) + ".mpack", "wb") as f:
@@ -193,5 +193,5 @@ class StateLog(AbstractLog):
 
     def __str__(self):
         _str = self.__repr__()
-        _str = _str + f"\n  Runtime cost: {self._runtime_taken}"
+        _str = f"{_str}\n  Runtime cost: {self._runtime_taken}"
         return _str

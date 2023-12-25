@@ -256,11 +256,7 @@ class DiscreteOperator(AbstractOperator):
         return op @ v
 
     def __matmul__(self, other):
-        if (
-            isinstance(other, np.ndarray)
-            or isinstance(other, jnp.ndarray)
-            or issparse(other)
-        ):
+        if isinstance(other, (np.ndarray, jnp.ndarray)) or issparse(other):
             return self.apply(other)
         elif isinstance(other, AbstractOperator):
             return self._op__matmul__(other)
@@ -272,11 +268,7 @@ class DiscreteOperator(AbstractOperator):
         return NotImplemented
 
     def __rmatmul__(self, other):
-        if (
-            isinstance(other, np.ndarray)
-            or isinstance(other, jnp.ndarray)
-            or issparse(other)
-        ):
+        if isinstance(other, (np.ndarray, jnp.ndarray)) or issparse(other):
             # return self.apply(other)
             return NotImplemented
         elif isinstance(other, AbstractOperator):

@@ -29,7 +29,7 @@ def _hide_submodules(
     module_path = module.__path__[0]
 
     for file in os.listdir(module_path):
-        if file.endswith(".py") and not file == "__init__.py":
+        if file.endswith(".py") and file != "__init__.py":
             mod_name = file[:-3]
         elif file in hide_folder:
             mod_name = file
@@ -42,7 +42,7 @@ def _hide_submodules(
                 and mod_name[0] != "_"
                 and mod_name not in ignore
             ):
-                new_name = "_" + mod_name
+                new_name = f"_{mod_name}"
                 setattr(module, new_name, getattr(module, mod_name))
                 delattr(module, mod_name)
 

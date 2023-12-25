@@ -268,10 +268,7 @@ class DenseSymmFFT(Module):
         if self.use_bias:
             x += jnp.expand_dims(bias, (0, 2))
 
-        if jnp.can_cast(x, dtype):
-            return x
-        else:
-            return x.real
+        return x if jnp.can_cast(x, dtype) else x.real
 
 
 class DenseEquivariantFFT(Module):
@@ -389,10 +386,7 @@ class DenseEquivariantFFT(Module):
         if self.use_bias:
             x += jnp.expand_dims(bias, (0, 2))
 
-        if jnp.can_cast(x, dtype):
-            return x
-        else:
-            return x.real
+        return x if jnp.can_cast(x, dtype) else x.real
 
 
 class DenseEquivariantIrrep(Module):
@@ -575,10 +569,7 @@ class DenseEquivariantIrrep(Module):
         if self.use_bias:
             x += jnp.expand_dims(bias, (0, 2))
 
-        if jnp.can_cast(x, dtype):
-            return x
-        else:
-            return x.real
+        return x if jnp.can_cast(x, dtype) else x.real
 
 
 class DenseEquivariantMatrix(Module):

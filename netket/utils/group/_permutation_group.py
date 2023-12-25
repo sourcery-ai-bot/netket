@@ -150,16 +150,12 @@ class PermutationGroup(FiniteGroup):
 
         pgroup = PermutationGroup(group.elems, self.degree)
 
-        if return_inverse:
-            return pgroup, inverse
-        else:
-            return pgroup
+        return (pgroup, inverse) if return_inverse else pgroup
 
     @struct.property_cached
     def inverse(self) -> Array:
         try:
             lookup = self._canonical_lookup()
-            inverses = []
             # `np.argsort` on a 1D permutation list generates the inverse permutation
             # it acts along last axis by default, so can perform it on to_array()
             # `np.argsort` changes int32 to int64 on Windows,
@@ -167,9 +163,7 @@ class PermutationGroup(FiniteGroup):
             perms = self.to_array()
             invperms = np.argsort(perms).astype(perms.dtype)
 
-            for invperm in invperms:
-                inverses.append(lookup[HashableArray(invperm)])
-
+            inverses = [lookup[HashableArray(invperm)] for invperm in invperms]
             return np.asarray(inverses, dtype=int)
         except KeyError as err:
             raise RuntimeError(

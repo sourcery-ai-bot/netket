@@ -111,26 +111,21 @@ def jacobian_default_mode(
         else:
             ## all complex parameters
             mode = HolomorphicMode
-    else:
-        complex_output = jax.numpy.iscomplexobj(
-            jax.eval_shape(
-                apply_fun,
-                {"params": pars, **model_state},
-                samples.reshape(-1, samples.shape[-1]),
-            )
+    elif complex_output := jax.numpy.iscomplexobj(
+        jax.eval_shape(
+            apply_fun,
+            {"params": pars, **model_state},
+            samples.reshape(-1, samples.shape[-1]),
         )
-
-        if complex_output:
-            if not leaf_isreal:
-                if holomorphic is None and warn:
-                    warnings.warn(
-                        HolomorphicUndeclaredWarning(),
-                        UserWarning,
-                        stacklevel=2,
-                    )
-                mode = ComplexMode
-            else:
-                mode = ComplexMode
-        else:
-            mode = RealMode
+    ):
+        if not leaf_isreal:
+            if holomorphic is None and warn:
+                warnings.warn(
+                    HolomorphicUndeclaredWarning(),
+                    UserWarning,
+                    stacklevel=2,
+                )
+        mode = ComplexMode
+    else:
+        mode = RealMode
     return mode

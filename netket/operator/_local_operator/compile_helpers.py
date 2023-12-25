@@ -55,7 +55,7 @@ def pack_internals(
     if len(acting_size) > 0:
         max_acting_on_sz = np.max(acting_size)
         max_local_hilbert_size = max(
-            [max(map(hilbert.size_at_index, aon)) for aon in op_acting_on]
+            max(map(hilbert.size_at_index, aon)) for aon in op_acting_on
         )
         max_op_size = max(map(lambda x: x.shape[0], operators))
         max_op_size_offdiag = np.max(op_n_conns_offdiag)
@@ -143,7 +143,7 @@ def pack_internals(
     )
 
     max_conn_size = 1 if nonzero_diagonal else 0
-    max_conn_size = max_conn_size + np.sum(op_n_conns_offdiag)
+    max_conn_size += np.sum(op_n_conns_offdiag)
 
     return {
         "acting_on": acting_on,

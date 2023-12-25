@@ -33,14 +33,14 @@ n_samples = 1000 // n_chains
 
 
 def bench(n_times, sampler):
-    for i in range(n_times):
+    for _ in range(n_times):
         ma.init_random_parameters(seed=1234, sigma=0.01)
         samples = sampler.generate_samples(n_samples)
     return samples
 
 
 def j_bench(n_times, sampler):
-    for i in range(n_times):
+    for _ in range(n_times):
         j_ma.init_random_parameters(seed=1234, sigma=0.01)
         samples = sampler.generate_samples(n_samples)
         samples.block_until_ready()
@@ -51,7 +51,7 @@ samples = j_bench(1, j_sa)
 samples.block_until_ready()
 t0 = time.time_ns()
 samples = j_bench(300, j_sa)
-print("Jax sampler (dtype " + str(dtype) + ")")
+print(f"Jax sampler (dtype {str(dtype)})")
 tf = time.time_ns()
 print("time (s) ", (tf - t0) / 1.0e9)
 
@@ -59,6 +59,6 @@ print("time (s) ", (tf - t0) / 1.0e9)
 samples = bench(1, sa)
 t0 = time.time_ns()
 samples = bench(300, sa)
-print("Numpy sampler (dtype " + str(dtype) + ")")
+print(f"Numpy sampler (dtype {str(dtype)})")
 tf = time.time_ns()
 print("time (s) ", (tf - t0) / 1.0e9)

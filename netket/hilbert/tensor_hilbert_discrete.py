@@ -52,9 +52,7 @@ class TensorDiscreteHilbert(TensorHilbert, DiscreteHilbert):
         """
         if not all(isinstance(hi, DiscreteHilbert) for hi in hilb_spaces):
             raise TypeError(
-                "Arguments to TensorDiscreteHilbert must all be "
-                "subtypes of DiscreteHilbert. However the types are:\n\n"
-                f"{list(type(hi) for hi in hilb_spaces)}\n"
+                f"Arguments to TensorDiscreteHilbert must all be subtypes of DiscreteHilbert. However the types are:\n\n{[type(hi) for hi in hilb_spaces]}\n"
             )
 
         shape = np.concatenate([hi.shape for hi in hilb_spaces])
@@ -73,7 +71,7 @@ class TensorDiscreteHilbert(TensorHilbert, DiscreteHilbert):
 
     @property
     def is_finite(self):
-        return all([hi.is_finite for hi in self._hilbert_spaces])
+        return all(hi.is_finite for hi in self._hilbert_spaces)
 
     @property
     def constrained(self) -> bool:
@@ -87,7 +85,7 @@ class TensorDiscreteHilbert(TensorHilbert, DiscreteHilbert):
         Typically, objects defined in the constrained space cannot be
         converted to QuTiP or other formats.
         """
-        return all([hi.constrained for hi in self._hilbert_spaces])
+        return all(hi.constrained for hi in self._hilbert_spaces)
 
     def states_at_index(self, i):
         # j = self._sub_index(i)

@@ -95,15 +95,16 @@ class Method:
         sig = self.signature
         parts = []
         if sig.types:
-            for nm, t in zip(argnames, sig.types):
-                parts.append(Text(f"{nm}: ") + repr_type(t))
+            parts.extend(
+                Text(f"{nm}: ") + repr_type(t)
+                for nm, t in zip(argnames, sig.types)
+            )
         if sig.varargs != Signature._default_varargs:
             parts.append(Text(f"*{argnames[-1]}: ") + repr_type(sig.varargs))
 
         if len(kwnames) > 0 or kwvar_name is not None:
             parts.append(Text("*"))
-        for kwnm in kwnames:
-            parts.append(Text(f"{kwnm}"))
+        parts.extend(Text(f"{kwnm}") for kwnm in kwnames)
         if kwvar_name is not None:
             parts.append(Text(f"**{kwvar_name}"))
 
@@ -152,8 +153,7 @@ class Method:
 
         if len(kwnames) > 0 or kwvar_name is not None:
             parts.append(Text("*"))
-        for kwnm in kwnames:
-            parts.append(Text(f"{kwnm}"))
+        parts.extend(Text(f"{kwnm}") for kwnm in kwnames)
         if kwvar_name is not None:
             parts.append(Text(f"**{kwvar_name}"))
 
@@ -223,10 +223,8 @@ def extract_return_type(f: Callable) -> TypeHint:
     # Extract specification.
     sig = inspect_signature(f)
 
-    # Get possible return type.
-    if sig.return_annotation is inspect.Parameter.empty:
-        return_type = typing.Any
-    else:
-        return_type = resolve_type_hint(sig.return_annotation)
-
-    return return_type
+    return (
+        typing.Any
+        if sig.return_annotation is inspect.Parameter.empty
+        else resolve_type_hint(sig.return_annotation)
+    )

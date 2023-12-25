@@ -145,10 +145,7 @@ class GCNN_FFT(nn.Module):
         else:
             x = logsumexp(x, axis=(-2, -1), b=jnp.asarray(self.characters))
 
-        if self.equal_amplitudes:
-            return 1j * jnp.imag(x)
-        else:
-            return x
+        return 1j * jnp.imag(x) if self.equal_amplitudes else x
 
 
 @deprecate_dtype
@@ -265,10 +262,7 @@ class GCNN_Irrep(nn.Module):
         else:
             x = logsumexp(x, axis=(-2, -1), b=jnp.asarray(self.characters))
 
-        if self.equal_amplitudes:
-            return 1j * jnp.imag(x)
-        else:
-            return x
+        return 1j * jnp.imag(x) if self.equal_amplitudes else x
 
 
 @deprecate_dtype
@@ -432,10 +426,7 @@ class GCNN_Parity_FFT(nn.Module):
         else:
             x = logsumexp(x, axis=(-2, -1), b=par_chars)
 
-        if self.equal_amplitudes:
-            return 1j * jnp.imag(x)
-        else:
-            return x
+        return 1j * jnp.imag(x) if self.equal_amplitudes else x
 
 
 @deprecate_dtype
@@ -614,10 +605,7 @@ class GCNN_Parity_Irrep(nn.Module):
         else:
             x = logsumexp(x, axis=(-2, -1), b=par_chars)
 
-        if self.equal_amplitudes:
-            return 1j * jnp.imag(x)
-        else:
-            return x
+        return 1j * jnp.imag(x) if self.equal_amplitudes else x
 
 
 @deprecate_dtype
@@ -727,19 +715,18 @@ def GCNN(
         if mode == "auto":
             mode = "irreps"
         sg = symmetries
+    elif irreps is not None and mode in ["irreps", "auto"]:
+        mode = "irreps"
+        sg = symmetries
+        irreps = tuple(HashableArray(irrep) for irrep in irreps)
+    elif product_table is not None and mode in ["fft", "auto"]:
+        mode = "fft"
+        sg = symmetries
+        product_table = HashableArray(product_table)
     else:
-        if irreps is not None and (mode == "irreps" or mode == "auto"):
-            mode = "irreps"
-            sg = symmetries
-            irreps = tuple(HashableArray(irrep) for irrep in irreps)
-        elif product_table is not None and (mode == "fft" or mode == "auto"):
-            mode = "fft"
-            sg = symmetries
-            product_table = HashableArray(product_table)
-        else:
-            raise ValueError(
-                "Specification of symmetries is wrong or incompatible with selected mode"
-            )
+        raise ValueError(
+            "Specification of symmetries is wrong or incompatible with selected mode"
+        )
 
     if mode == "fft":
         if shape is None:
@@ -756,17 +743,17 @@ def GCNN(
 
     if characters is None:
         characters = HashableArray(np.ones(len(np.asarray(sg))))
-    else:
-        if (
+    elif (
             not jnp.iscomplexobj(characters)
             and not is_complex_dtype(param_dtype)
             and not complex_output
             and jnp.any(characters < 0)
         ):
-            raise ValueError(
-                "`complex_output` must be used with real parameters and negative "
-                "characters to avoid NaN errors."
-            )
+        raise ValueError(
+            "`complex_output` must be used with real parameters and negative "
+            "characters to avoid NaN errors."
+        )
+    else:
         characters = HashableArray(characters)
 
     if mode == "fft":

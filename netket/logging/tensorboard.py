@@ -34,19 +34,15 @@ def tree_log(tree, root, data):
         return
     elif isinstance(tree, list):
         for i, val in enumerate(tree):
-            tree_log(val, root + f"/{i}", data)
-
-    elif isinstance(tree, list) and hasattr(tree, "_fields"):
-        for key in tree._fields:
-            tree_log(getattr(tree, key), root + f"/{key}", data)
+            tree_log(val, f"{root}/{i}", data)
 
     elif isinstance(tree, tuple):
         for i, val in enumerate(tree):
-            tree_log(val, root + f"/{i}", data)
+            tree_log(val, f"{root}/{i}", data)
 
     elif isinstance(tree, dict):
         for key, value in tree.items():
-            tree_log(value, root + f"/{key}", data)  # noqa: F722
+            tree_log(value, f"{root}/{key}", data)
 
     elif hasattr(tree, "to_compound"):
         tree_log(tree.to_compound()[1], root, data)  # noqa: F722
@@ -55,8 +51,8 @@ def tree_log(tree, root, data):
         tree_log(tree.to_dict(), root, data)  # noqa: F722
 
     elif isinstance(tree, complex):
-        tree_log(tree.real, root + "/re", data)  # noqa: F722
-        tree_log(tree.imag, root + "/im", data)  # noqa: F722
+        tree_log(tree.real, f"{root}/re", data)
+        tree_log(tree.imag, f"{root}/im", data)
 
     else:
         data.append((root, tree))

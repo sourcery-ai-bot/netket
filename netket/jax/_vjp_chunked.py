@@ -100,18 +100,14 @@ _value_and_vjp_fun_chunked = compose(
 def check_chunk_size(chunk_argnums, chunk_size, *primals):
     if chunk_size is None:
         return None
-    else:
-        n_elements = jax.tree_util.tree_leaves(primals[chunk_argnums[0]])[0].shape[0]
-        # check that they are all the same size
-        chunk_leaves = jax.tree_util.tree_leaves([primals[i] for i in chunk_argnums])
-        if not all(map(lambda x: x.shape[0] == n_elements, chunk_leaves)):
-            raise ValueError(
-                "The chunked arguments have inconsistent leading array dimensions"
-            )
-        if chunk_size >= n_elements:
-            return None
-        else:
-            return chunk_size
+    n_elements = jax.tree_util.tree_leaves(primals[chunk_argnums[0]])[0].shape[0]
+    # check that they are all the same size
+    chunk_leaves = jax.tree_util.tree_leaves([primals[i] for i in chunk_argnums])
+    if not all(map(lambda x: x.shape[0] == n_elements, chunk_leaves)):
+        raise ValueError(
+            "The chunked arguments have inconsistent leading array dimensions"
+        )
+    return None if chunk_size >= n_elements else chunk_size
 
 
 def _vjp_chunked(
@@ -279,9 +275,6 @@ def vjp_chunked(
                 primals,
             )
             return vjp_fun_sh
-        else:
-            pass  # no chunking, continue below
-
     ############################################################################
     # no sharding (or sharded, but not chunking)
 

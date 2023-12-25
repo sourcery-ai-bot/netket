@@ -79,10 +79,7 @@ class MetropolisSamplerState(SamplerState):
         The rate is computed since the last reset of the sampler.
         Will return None if no sampling has been performed since then.
         """
-        if self.n_steps == 0:
-            return None
-
-        return self.n_accepted / self.n_steps
+        return None if self.n_steps == 0 else self.n_accepted / self.n_steps
 
     @property
     def n_steps(self) -> int:
@@ -98,9 +95,7 @@ class MetropolisSamplerState(SamplerState):
 
     def __repr__(self):
         if self.n_steps > 0:
-            acc_string = "# accepted = {}/{} ({}%), ".format(
-                self.n_accepted, self.n_steps, self.acceptance * 100
-            )
+            acc_string = f"# accepted = {self.n_accepted}/{self.n_steps} ({self.acceptance * 100}%), "
         else:
             acc_string = ""
 
@@ -329,12 +324,7 @@ class MetropolisSampler(Sampler):
         self.n_sweeps = n_sweeps
         self.n_chains = n_chains
 
-    def sample_next(
-        sampler,
-        machine: Union[Callable, nn.Module],
-        parameters: PyTree,
-        state: Optional[SamplerState] = None,
-    ) -> tuple[SamplerState, jnp.ndarray]:
+    def sample_next(self, machine: Union[Callable, nn.Module], parameters: PyTree, state: Optional[SamplerState] = None) -> tuple[SamplerState, jnp.ndarray]:
         """
         Samples the next state in the Markov chain.
 
@@ -354,16 +344,14 @@ class MetropolisSampler(Sampler):
             a scan function the first returned argument should be the state.
         """
         if state is None:
-            state = sampler.reset(machine, parameters)
+            state = self.reset(machine, parameters)
 
-        return sampler._sample_next(wrap_afun(machine), parameters, state)
+        return self._sample_next(wrap_afun(machine), parameters, state)
 
-    def _init_state(sampler, machine, params, key):
+    def _init_state(self, machine, params, key):
         key_state, key_rule = jax.random.split(key, 2)
-        rule_state = sampler.rule.init_state(sampler, machine, params, key_rule)
-        σ = jnp.zeros(
-            (sampler.n_chains_per_rank, sampler.hilbert.size), dtype=sampler.dtype
-        )
+        rule_state = self.rule.init_state(self, machine, params, key_rule)
+        σ = jnp.zeros((self.n_chains_per_rank, self.hilbert.size), dtype=self.dtype)
 
         if config.netket_experimental_sharding and jax.device_count() > 1:
             # TODO If we end up rewriting the hilbert spaces in jax then we can avoid
@@ -373,40 +361,40 @@ class MetropolisSampler(Sampler):
 
         # If we don't reset the chain at every sampling iteration, then reset it
         # now.
-        if not sampler.reset_chains:
+        if not self.reset_chains:
             key_state, rng = jax.random.split(key_state)
-            σ = sampler.rule.random_state(sampler, machine, params, state, rng)
+            σ = self.rule.random_state(self, machine, params, state, rng)
             if config.netket_experimental_sharding and jax.device_count() > 1:
                 σ = distribute_to_devices_along_axis(σ)
             _assert_good_sample_shape(
                 σ,
-                (sampler.n_chains_per_rank, sampler.hilbert.size),
-                sampler.dtype,
-                f"{sampler.rule}.random_state",
+                (self.n_chains_per_rank, self.hilbert.size),
+                self.dtype,
+                f"{self.rule}.random_state",
             )
             state = state.replace(σ=σ, rng=key_state)
 
         return state
 
-    def _reset(sampler, machine, parameters, state):
+    def _reset(self, machine, parameters, state):
         new_rng, rng = jax.jit(jax.random.split)(
             state.rng
         )  # use jit so that we can do it on global shared array
 
-        if sampler.reset_chains:
-            σ = sampler.rule.random_state(sampler, machine, parameters, state, rng)
+        if self.reset_chains:
+            σ = self.rule.random_state(self, machine, parameters, state, rng)
             if config.netket_experimental_sharding and jax.device_count() > 1:
                 σ = distribute_to_devices_along_axis(σ)
             _assert_good_sample_shape(
                 σ,
-                (sampler.n_chains_per_rank, sampler.hilbert.size),
-                sampler.dtype,
-                f"{sampler.rule}.random_state",
+                (self.n_chains_per_rank, self.hilbert.size),
+                self.dtype,
+                f"{self.rule}.random_state",
             )
         else:
             σ = state.σ
 
-        rule_state = sampler.rule.reset(sampler, machine, parameters, state)
+        rule_state = self.rule.reset(self, machine, parameters, state)
 
         return state.replace(
             σ=σ,
@@ -509,29 +497,44 @@ class MetropolisSampler(Sampler):
         samples = jnp.swapaxes(samples, 0, 1)
         return samples, state
 
-    def __repr__(sampler):
+    def __repr__(self):
         return (
-            f"{type(sampler).__name__}("
-            + f"\n  hilbert = {sampler.hilbert},"
-            + f"\n  rule = {sampler.rule},"
-            + f"\n  n_chains = {sampler.n_chains},"
-            + f"\n  n_sweeps = {sampler.n_sweeps},"
-            + f"\n  reset_chains = {sampler.reset_chains},"
-            + f"\n  machine_power = {sampler.machine_pow},"
-            + f"\n  dtype = {sampler.dtype}"
-            + ")"
-        )
+            (
+                (
+                    (
+                        (
+                            (
+                                (
+                                    f"{type(self).__name__}("
+                                    + f"\n  hilbert = {self.hilbert},"
+                                )
+                                + f"\n  rule = {self.rule},"
+                            )
+                            + f"\n  n_chains = {self.n_chains},"
+                        )
+                        + f"\n  n_sweeps = {self.n_sweeps},"
+                    )
+                    + f"\n  reset_chains = {self.reset_chains},"
+                )
+                + f"\n  machine_power = {self.machine_pow},"
+            )
+            + f"\n  dtype = {self.dtype}"
+        ) + ")"
 
-    def __str__(sampler):
+    def __str__(self):
         return (
-            f"{type(sampler).__name__}("
-            + f"rule = {sampler.rule}, "
-            + f"n_chains = {sampler.n_chains}, "
-            + f"n_sweeps = {sampler.n_sweeps}, "
-            + f"reset_chains = {sampler.reset_chains}, "
-            + f"machine_power = {sampler.machine_pow}, "
-            + f"dtype = {sampler.dtype})"
-        )
+            (
+                (
+                    (
+                        (f"{type(self).__name__}(" + f"rule = {self.rule}, ")
+                        + f"n_chains = {self.n_chains}, "
+                    )
+                    + f"n_sweeps = {self.n_sweeps}, "
+                )
+                + f"reset_chains = {self.reset_chains}, "
+            )
+            + f"machine_power = {self.machine_pow}, "
+        ) + f"dtype = {self.dtype})"
 
 
 @deprecated(

@@ -11,17 +11,16 @@ for requirement in requirements:
     if requirement.extras:
         dependency += "[" + ",".join(requirement.extras) + "]"
     for comparator, version in requirement.specs:
-        if comparator == "==":
-            if len(requirement.specs) != 1:
-                raise ValueError(f"Invalid dependency: {requirement}")
-            dependency += "==" + version
-        elif comparator == "<=":
-            if len(requirement.specs) != 2:
-                raise ValueError(f"Invalid dependency: {requirement}")
-        elif comparator == ">=":
-            dependency += "==" + version
-        elif comparator == "~=":
-            dependency += "==" + version
+        if (
+            comparator == "<="
+            and len(requirement.specs) != 2
+            or comparator != "<="
+            and comparator == "=="
+            and len(requirement.specs) != 1
+        ):
+            raise ValueError(f"Invalid dependency: {requirement}")
+        elif comparator != "<=" and comparator in ["==", ">=", "~="]:
+            dependency += f"=={version}"
     oldest_dependencies.append(dependency)
 
 for dependency in oldest_dependencies:

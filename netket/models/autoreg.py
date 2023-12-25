@@ -101,8 +101,7 @@ class AbstractARNN(nn.Module):
 
         log_psi = self.conditionals_log_psi(inputs)
 
-        p = jnp.exp(self.machine_pow * log_psi.real)
-        return p
+        return jnp.exp(self.machine_pow * log_psi.real)
 
     def conditional(self, inputs: Array, index: int) -> Array:
         """
@@ -223,10 +222,9 @@ class ARNNSequential(AbstractARNN):
             x = self._layers[i](x)
 
         x = x.reshape((x.shape[0], -1, x.shape[-1]))
-        log_psi = _normalize(x, self.machine_pow)
-        return log_psi
+        return _normalize(x, self.machine_pow)
 
-    def reshape_inputs(model: Any, inputs: Array) -> Array:
+    def reshape_inputs(self, inputs: Array) -> Array:
         """
         Reshapes the inputs from (batch_size, hilbert_size) to (batch_size, spatial_dims...)
         before sending them to the ARNN layers.

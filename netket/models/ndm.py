@@ -69,11 +69,7 @@ class PureRBM(nn.Module):
         xr = self.activation(W(σr)).sum(axis=-1)
         xc = self.activation(W(σc)).sum(axis=-1)
 
-        if symmetric:
-            y = xr + xc
-        else:
-            y = xr - xc
-
+        y = xr + xc if symmetric else xr - xc
         if self.use_visible_bias:
             v_bias = self.param(
                 "visible_bias",
@@ -81,11 +77,7 @@ class PureRBM(nn.Module):
                 (σr.shape[-1],),
                 self.param_dtype,
             )
-            if symmetric:
-                out_bias = jnp.dot(σr + σc, v_bias)
-            else:
-                out_bias = jnp.dot(σr - σc, v_bias)
-
+            out_bias = jnp.dot(σr + σc, v_bias) if symmetric else jnp.dot(σr - σc, v_bias)
             y = y + out_bias
 
         return 0.5 * y

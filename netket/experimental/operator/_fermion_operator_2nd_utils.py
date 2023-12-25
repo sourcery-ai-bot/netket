@@ -207,10 +207,7 @@ def _check_hermitian(
     dict_normal = dict(dict_normal)
     dict_hc_normal = dict(dict_hc_normal)
 
-    # compare dict up to a tolerance
-    is_hermitian = _dict_compare(dict_normal, dict_hc_normal)
-
-    return is_hermitian
+    return _dict_compare(dict_normal, dict_hc_normal)
 
 
 def _herm_conj(
@@ -251,7 +248,7 @@ def _convert_terms_to_spin_blocks(
         return orb_idx + n_orbitals * spin_idx
 
     def _convert_term(term):
-        return tuple([(_convert_loc(t[0]), t[1]) for t in term])
+        return tuple((_convert_loc(t[0]), t[1]) for t in term)
 
     return tuple(list(map(_convert_term, terms)))
 
@@ -310,7 +307,7 @@ def _canonicalize_input(
     weights = np.array(weights, dtype=dtype).tolist()
     constant = np.array(constant, dtype=dtype).item()
 
-    if not len(weights) == len(terms):
+    if len(weights) != len(terms):
         raise ValueError(
             f"length of weights should be equal, but received {len(weights)} and {len(terms)}"
         )
@@ -368,7 +365,7 @@ def _parse_term_tree(terms: OperatorTermsList) -> OperatorTermsList:
         if isinstance(t, str):
             return _parse_string(t)
         elif hasattr(t, "__len__"):
-            return tuple([_parse_branch(b) for b in t])
+            return tuple(_parse_branch(b) for b in t)
         else:
             return int(t)
 
@@ -378,7 +375,7 @@ def _parse_term_tree(terms: OperatorTermsList) -> OperatorTermsList:
 def _parse_string(s: str) -> OperatorTerm:
     """Parse strings such as '1^ 2' into a term form ((1, 1), (2, 0))"""
     s = s.strip()
-    if s == "":
+    if not s:
         return ()
     s = re.sub(" +", " ", s)
     terms = s.split(" ")
@@ -418,7 +415,7 @@ def _make_tuple_tree(terms: PyTree) -> PyTree:
 
     def _make_tuple(branch):
         if hasattr(branch, "__len__"):
-            return tuple([_make_tuple(t) for t in branch])
+            return tuple(_make_tuple(t) for t in branch)
         else:
             return int(branch)
 

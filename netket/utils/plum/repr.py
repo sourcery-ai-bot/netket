@@ -134,9 +134,7 @@ def __repr_from_rich__(self) -> str:
     console = rich.get_console()
     with console.capture() as capture:
         console.print(self, end="")
-    res = capture.get()
-    # print("got ", res)
-    return res
+    return capture.get()
 
 
 def _repr_mimebundle_from_rich_(

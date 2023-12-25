@@ -48,11 +48,11 @@ for i, sample in enumerate(sa.samples(n_samples)):
     samples[i] = sample
 
 
-loc = np.empty(samples.shape[0:2], dtype=np.complex128)
+loc = np.empty(samples.shape[:2], dtype=np.complex128)
 
 
 def compute_locals(ha, n_times):
-    for k in range(n_times):
+    for _ in range(n_times):
         for i, sample in enumerate(samples):
             local_values(ha, ma, sample, out=loc[i])
 

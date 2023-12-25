@@ -125,7 +125,6 @@ def flip_state_scalar(hilb, key, state, indx):
 @dispatch
 def flip_state_batch(hilb, key, states, indxs):
     keys = jax.random.split(key, states.shape[0])
-    res = jax.vmap(flip_state_scalar, in_axes=(None, 0, 0, 0), out_axes=0)(
+    return jax.vmap(flip_state_scalar, in_axes=(None, 0, 0, 0), out_axes=0)(
         hilb, keys, states, indxs
     )
-    return res
